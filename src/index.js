@@ -44,7 +44,8 @@ app.post('/webhook', async (req, res) => {
                    return res.status(401).json({ error: 'Não autorizado.' });
            }
 
-           const { phone, message } = req.body;
+const phone = req.body.phone || req.body.number;
+const message = req.body.message || req.body.textMessage || (req.body.textMessage && req.body.textMessage.text);
 
 // Validação de campos obrigatórios com mensagens específicas
   const errors = [];
