@@ -46,9 +46,24 @@ app.post('/webhook', async (req, res) => {
 
            const { phone, message } = req.body;
 
-           if (!phone || !message) {
-                   return res.status(400).json({ error: 'Campos obrigatórios: phone e message.' });
-           }
+// Validação de campos obrigatórios com mensagens específicas
+  const errors = [];
+  
+  if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+            errors.push('Campo obrigatório: phone');
+  }
+
+        if (!message || typeof message !== 'string' || message.trim() === '') {
+                  errors.push('Campo obrigatório: message');
+        }
+
+        if (errors.length > 0) {
+                  return res.status(400).json({ 
+                              error: 'Validação falhou', 
+                              details: errors 
+                  });
+        }
+  }
 
            // Resposta imediata para evitar o erro de Timeout (40s) no Make
            res.status(200).json({
