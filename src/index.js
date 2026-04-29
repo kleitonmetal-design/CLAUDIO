@@ -1,48 +1,106 @@
 const express = require('express');
 const cors = require('cors');
+const https = require('https');
+const http = require('http');
+const { URL } = require('url');
+
 const app = express();
 
 // Configurações de segurança e tráfego
 app.use(cors());
 app.use(express.json());
 
-// Pega a chave de segurança que você configurou no painel do Render
+// Variáveis de ambiente
 const API_KEY = process.env.API_KEY || 'chave_reserva_seguranca';
+const EVOLUTION_URL = process.env.EVOLUTION_URL; // Ex: https://sua-evolution.com
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
+const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE; // Nome da instância
 
 /**
  * Rota de Diagnóstico (Health Check)
  * Necessária para o Render saber que o sistema está 'Live'.
  */
 app.get('/health', (req, res) => {
-  res.status(200).send('API do Claudio: Operacional e Segura');
+    res.status(200).send('API do Claudio: Operacional e Segura');
 });
 
 /**
  * Rota do Webhook
- * Onde o Make.com vai entregar os dados do Claude.
+ * Onde o Make.com entrega os dados e o Claudio repassa para o WhatsApp via Evolution API.
  */
-app.post('/webhook', (req, res) => {
-  const { apikey } = req.headers;
+app.post('/webhook', async (req, res) => {
+    const { apikey } = req.headers;
 
-  // Verificação de Integridade e Autenticação
-  if (!apikey || apikey !== API_KEY) {
-    console.error('ALERTA: Tentativa de acesso sem chave válida.');
-    return res.status(401).json({ error: 'Não autorizado.' });
-  }
+           // Verificação de Autenticação
+           if (!apikey || apikey !== API_KEY) {
+                 console.error('ALERTA: Tentativa de acesso sem chave válida.');
+                 return res.status(401).json({ error: 'Não autorizado.' });
+           }
 
-  const dadosRecebidos = req.body;
-  console.log('Dados processados com sucesso:', dadosRecebidos);
+           const { phone, message } = req.body;
 
-  // Resposta imediata para evitar o erro de Timeout (40s) no Make
-  res.status(200).json({ 
-    status: 'success', 
-    message: 'Recebido pelo Claudio!',
-    timestamp: new Date().toISOString()
-  });
+           if (!phone || !message) {
+                 return res.status(400).json({ error: 'Campos obrigatórios: phone e message.' });
+           }
+
+           // Resposta imediata para evitar o erro de Timeout (40s) no Make
+           res.status(200).json({
+                 status: 'success',
+                 message: 'Mensagem recebida pelo Claudio! Enviando ao WhatsApp...',
+                 timestamp: new Date().toISOString()
+           });
+
+           // Envio assíncrono para a Evolution API
+           try {
+                 if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
+                         console.error('ERRO: Variáveis de ambiente da Evolution API não configuradas.');
+                         return;
+                 }
+
+      const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
+                 const parsedUrl = new URL(endpoint);
+
+      const payload = JSON.stringify({
+              number: phone,
+              text: message
+      });
+
+      const options = {
+              hostname: parsedUrl.hostname,
+              port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+              path: parsedUrl.pathname,
+              method: 'POST',
+              headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': EVOLUTION_API_KEY,
+                        'Content-Length': Buffer.byteLength(payload)
+              }
+      };
+
+      const lib = parsedUrl.protocol === 'https:' ? https : http;
+
+      const request = lib.request(options, (response) => {
+              let data = '';
+              response.on('data', (chunk) => { data += chunk; });
+              response.on('end', () => {
+                        console.log(`[Claudio] Mensagem enviada para ${phone}. Status: ${response.statusCode}. Resposta: ${data}`);
+              });
+      });
+
+      request.on('error', (err) => {
+              console.error('[Claudio] Erro ao enviar para Evolution API:', err.message);
+      });
+
+      request.write(payload);
+                 request.end();
+
+           } catch (err) {
+                 console.error('[Claudio] Erro inesperado:', err.message);
+           }
 });
 
 // Porta dinâmica para o ambiente do Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor Claudio rodando na porta ${PORT}`);
 });
