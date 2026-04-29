@@ -63,7 +63,6 @@ app.post('/webhook', async (req, res) => {
                               details: errors 
                   });
         }
-  }
 
            // Resposta imediata para evitar o erro de Timeout (40s) no Make
            res.status(200).json({
