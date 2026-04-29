@@ -17,11 +17,18 @@ const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE; // Nome da instância
 
 /**
+ * Rota de Diagnóstico (Raiz)
+ */
+app.get('/', (req, res) => {
+      res.status(200).json({ status: 'API Claudio está ativa' });
+});
+
+/**
  * Rota de Diagnóstico (Health Check)
  * Necessária para o Render saber que o sistema está 'Live'.
  */
 app.get('/health', (req, res) => {
-    res.status(200).send('API do Claudio: Operacional e Segura');
+      res.status(200).send('API do Claudio: Operacional e Segura');
 });
 
 /**
@@ -29,78 +36,85 @@ app.get('/health', (req, res) => {
  * Onde o Make.com entrega os dados e o Claudio repassa para o WhatsApp via Evolution API.
  */
 app.post('/webhook', async (req, res) => {
-    const { apikey } = req.headers;
+      // Verificação de Autenticação - Corrigido para ser case-insensitive
+           const apikey = req.headers['apikey'] || req.headers['x-apikey'];
 
-           // Verificação de Autenticação
            if (!apikey || apikey !== API_KEY) {
-                 console.error('ALERTA: Tentativa de acesso sem chave válida.');
-                 return res.status(401).json({ error: 'Não autorizado.' });
+                   console.error('ALERTA: Tentativa de acesso sem chave válida.');
+                   return res.status(401).json({ error: 'Não autorizado.' });
            }
 
            const { phone, message } = req.body;
 
            if (!phone || !message) {
-                 return res.status(400).json({ error: 'Campos obrigatórios: phone e message.' });
+                   return res.status(400).json({ error: 'Campos obrigatórios: phone e message.' });
            }
 
            // Resposta imediata para evitar o erro de Timeout (40s) no Make
            res.status(200).json({
-                 status: 'success',
-                 message: 'Mensagem recebida pelo Claudio! Enviando ao WhatsApp...',
-                 timestamp: new Date().toISOString()
+                   status: 'success',
+                   message: 'Mensagem recebida pelo Claudio! Enviando ao WhatsApp...',
+                   timestamp: new Date().toISOString()
            });
 
            // Envio assíncrono para a Evolution API
            try {
-                 if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
-                         console.error('ERRO: Variáveis de ambiente da Evolution API não configuradas.');
-                         return;
-                 }
+                   if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
+                             console.error('ERRO: Variáveis de ambiente da Evolution API não configuradas.');
+                             return;
+                   }
 
-      const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
-                 const parsedUrl = new URL(endpoint);
+        // Validação de URL
+        let parsedUrl;
+                   try {
+                             const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
+                             parsedUrl = new URL(endpoint);
+                   } catch (err) {
+                             console.error('ERRO: URL inválida da Evolution API:', err.message);
+                             return;
+                   }
 
-      const payload = JSON.stringify({
-              number: phone,
-              text: message
-      });
+        const payload = JSON.stringify({
+                  number: phone,
+                  text: message
+        });
 
-      const options = {
-              hostname: parsedUrl.hostname,
-              port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
-              path: parsedUrl.pathname,
-              method: 'POST',
-              headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': EVOLUTION_API_KEY,
-                        'Content-Length': Buffer.byteLength(payload)
-              }
-      };
+        const options = {
+                  hostname: parsedUrl.hostname,
+                  port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+                  path: parsedUrl.pathname,
+                  method: 'POST',
+                  headers: {
+                              'Content-Type': 'application/json',
+                              'apikey': EVOLUTION_API_KEY,
+                              'Content-Length': Buffer.byteLength(payload)
+                  }
+        };
 
-      const lib = parsedUrl.protocol === 'https:' ? https : http;
+        const lib = parsedUrl.protocol === 'https:' ? https : http;
 
-      const request = lib.request(options, (response) => {
-              let data = '';
-              response.on('data', (chunk) => { data += chunk; });
-              response.on('end', () => {
-                        console.log(`[Claudio] Mensagem enviada para ${phone}. Status: ${response.statusCode}. Resposta: ${data}`);
-              });
-      });
+        const request = lib.request(options, (response) => {
+                  let data = '';
+                  response.on('data', (chunk) => { data += chunk; });
+                  response.on('end', () => {
+                              console.log(`[Claudio] Mensagem enviada para ${phone}. Status: ${response.statusCode}. Resposta: ${data}`);
+                  });
+        });
 
-      request.on('error', (err) => {
-              console.error('[Claudio] Erro ao enviar para Evolution API:', err.message);
-      });
+        request.on('error', (err) => {
+                  console.error('[Claudio] Erro ao enviar para Evolution API:', err.message);
+        });
 
-      request.write(payload);
-                 request.end();
+        request.write(payload);
+                   request.end();
 
            } catch (err) {
-                 console.error('[Claudio] Erro inesperado:', err.message);
+                   console.error('[Claudio] Erro inesperado:', err.message);
            }
 });
 
 // Porta dinâmica para o ambiente do Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor Claudio rodando na porta ${PORT}`);
+      console.log(`Servidor Claudio rodando na porta ${PORT}`);
 });
