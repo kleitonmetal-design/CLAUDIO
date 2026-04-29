@@ -133,3 +133,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
       console.log(`Servidor Claudio rodando na porta ${PORT}`);
 });
+
+// No final do seu arquivo src/index.js
+
+// Esta linha define que a porta será a que o Render fornecer (process.env.PORT) 
+// ou 3000 como reserva (fallback)
+const PORT = process.env.PORT || 3000; [cite: 51]
+
+// Esta linha faz o servidor "escutar" (bind) na porta definida acima
+app.listen(PORT, () => { 
+    console.log(`Servidor Claudio rodando na porta ${PORT}`); 
+}); [cite: 52]
