@@ -3,6 +3,8 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const { buscarChamadas, buscarRamal, buscarResumo, getDefaultRange } = require('./micrivox');
+const { gerarRelatorioTexto, gerarRelatorioDeResumo } = require('./reports');
 
 const app = express();
 
@@ -124,6 +126,174 @@ app.post('/webhook', async (req, res) => {
 
     } catch (err) {
         console.error('[Claudio] Erro inesperado:', err.message);
+    }
+});
+
+/**
+ * Utilitário interno: envia mensagem via Evolution API
+ */
+async function enviarWhatsApp(phone, message) {
+    if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
+        throw new Error('Variáveis da Evolution API não configuradas.');
+    }
+
+    const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
+    const parsedUrl = new URL(endpoint);
+    const payload = JSON.stringify({ number: phone, text: message });
+
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+            path: parsedUrl.pathname,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': EVOLUTION_API_KEY,
+                'Content-Length': Buffer.byteLength(payload),
+            },
+        };
+
+        const lib = parsedUrl.protocol === 'https:' ? https : http;
+        const req = lib.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
+        });
+
+        req.on('error', reject);
+        req.write(payload);
+        req.end();
+    });
+}
+
+/**
+ * Rota: Relatório de chamadas Micrivox → WhatsApp
+ * Body: { phone, data_inicio?, data_fim? }
+ */
+app.post('/micrivox/relatorio', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { phone, data_inicio, data_fim } = req.body;
+
+    if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+        return res.status(400).json({ error: 'Campo obrigatório: phone' });
+    }
+
+    try {
+        const { inicio, fim } = data_inicio && data_fim
+            ? { inicio: data_inicio, fim: data_fim }
+            : getDefaultRange();
+
+        const dados = await buscarChamadas(inicio, fim);
+        const periodo = `${inicio} a ${fim}`;
+        const texto = gerarRelatorioTexto(dados, { periodo });
+
+        await enviarWhatsApp(phone.trim(), texto);
+
+        console.log(`[Claudio/Micrivox] Relatório enviado para ${phone} | Período: ${periodo}`);
+        res.status(200).json({ status: 'success', message: 'Relatório gerado e enviado via WhatsApp.', periodo });
+    } catch (err) {
+        console.error('[Claudio/Micrivox] Erro ao gerar relatório:', err.message);
+        res.status(500).json({ error: 'Erro ao gerar relatório.', detail: err.message });
+    }
+});
+
+/**
+ * Rota: Relatório por ramal Micrivox → WhatsApp
+ * Body: { phone, ramal, data_inicio?, data_fim? }
+ */
+app.post('/micrivox/relatorio/ramal', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { phone, ramal, data_inicio, data_fim } = req.body;
+
+    const errors = [];
+    if (!phone || typeof phone !== 'string' || phone.trim() === '') errors.push('Campo obrigatório: phone');
+    if (!ramal || typeof ramal !== 'string' || ramal.trim() === '') errors.push('Campo obrigatório: ramal');
+
+    if (errors.length > 0) {
+        return res.status(400).json({ error: 'Validação falhou', details: errors });
+    }
+
+    try {
+        const { inicio, fim } = data_inicio && data_fim
+            ? { inicio: data_inicio, fim: data_fim }
+            : getDefaultRange();
+
+        const dados = await buscarRamal(ramal.trim(), inicio, fim);
+        const periodo = `${inicio} a ${fim}`;
+        const texto = gerarRelatorioTexto(dados, { periodo, ramal: ramal.trim() });
+
+        await enviarWhatsApp(phone.trim(), texto);
+
+        console.log(`[Claudio/Micrivox] Relatório do ramal ${ramal} enviado para ${phone}`);
+        res.status(200).json({ status: 'success', message: `Relatório do ramal ${ramal} enviado via WhatsApp.`, periodo });
+    } catch (err) {
+        console.error('[Claudio/Micrivox] Erro ao gerar relatório de ramal:', err.message);
+        res.status(500).json({ error: 'Erro ao gerar relatório de ramal.', detail: err.message });
+    }
+});
+
+/**
+ * Rota: Dados brutos de chamadas Micrivox (JSON)
+ * Query: ?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD
+ */
+app.get('/micrivox/dados', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { data_inicio, data_fim } = req.query;
+
+    try {
+        const dados = await buscarChamadas(data_inicio, data_fim);
+        res.status(200).json({ status: 'success', data: dados });
+    } catch (err) {
+        console.error('[Claudio/Micrivox] Erro ao buscar dados:', err.message);
+        res.status(500).json({ error: 'Erro ao buscar dados do Micrivox.', detail: err.message });
+    }
+});
+
+/**
+ * Rota: Resumo consolidado Micrivox → WhatsApp
+ * Body: { phone, data_inicio?, data_fim? }
+ */
+app.post('/micrivox/resumo', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { phone, data_inicio, data_fim } = req.body;
+
+    if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+        return res.status(400).json({ error: 'Campo obrigatório: phone' });
+    }
+
+    try {
+        const { inicio, fim } = data_inicio && data_fim
+            ? { inicio: data_inicio, fim: data_fim }
+            : getDefaultRange();
+
+        const resumo = await buscarResumo(inicio, fim);
+        const periodo = `${inicio} a ${fim}`;
+        const texto = gerarRelatorioDeResumo(resumo, { periodo });
+
+        await enviarWhatsApp(phone.trim(), texto);
+
+        console.log(`[Claudio/Micrivox] Resumo enviado para ${phone} | Período: ${periodo}`);
+        res.status(200).json({ status: 'success', message: 'Resumo enviado via WhatsApp.', periodo });
+    } catch (err) {
+        console.error('[Claudio/Micrivox] Erro ao gerar resumo:', err.message);
+        res.status(500).json({ error: 'Erro ao gerar resumo.', detail: err.message });
     }
 });
 
