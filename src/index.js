@@ -3,6 +3,8 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const microvix = require('./microvix');
+const reports = require('./reports');
 
 const app = express();
 
@@ -126,6 +128,109 @@ app.post('/webhook', async (req, res) => {
         console.error('[Claudio] Erro inesperado:', err.message);
     }
 });
+
+// ─── Rotas Microvix ───────────────────────────────────────────────────────────
+
+function microvixAuth(req, res, next) {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+    next();
+}
+
+app.get('/microvix/lojas', microvixAuth, async (req, res) => {
+    try {
+        const dados = await microvix.getLojas();
+        res.json({ total: dados.length, dados });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/produtos', microvixAuth, async (req, res) => {
+    try {
+        const timestamp = req.query.timestamp || 0;
+        const dados = await microvix.getProdutos(timestamp);
+        res.json({ total: dados.length, dados });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/clientes', microvixAuth, async (req, res) => {
+    try {
+        const timestamp = req.query.timestamp || 0;
+        const dados = await microvix.getClientes(timestamp);
+        res.json({ total: dados.length, dados });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/vendedores', microvixAuth, async (req, res) => {
+    try {
+        const timestamp = req.query.timestamp || 0;
+        const dados = await microvix.getVendedores(timestamp);
+        res.json({ total: dados.length, dados });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/vendas', microvixAuth, async (req, res) => {
+    const { dtInicio, dtFim, codLoja } = req.query;
+    if (!dtInicio || !dtFim) {
+        return res.status(400).json({ error: 'Parâmetros obrigatórios: dtInicio e dtFim (formato YYYY-MM-DD).' });
+    }
+    try {
+        const dados = await microvix.getVendas(dtInicio, dtFim, codLoja);
+        res.json({ total: dados.length, dados });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/relatorio/vendas', microvixAuth, async (req, res) => {
+    const { dtInicio, dtFim, codLoja } = req.query;
+    if (!dtInicio || !dtFim) {
+        return res.status(400).json({ error: 'Parâmetros obrigatórios: dtInicio e dtFim (formato YYYY-MM-DD).' });
+    }
+    try {
+        const [vendas, detalhes] = await Promise.all([
+            microvix.getVendas(dtInicio, dtFim, codLoja),
+            microvix.getVendasDetalhes(dtInicio, dtFim, codLoja),
+        ]);
+        const relatorio = reports.gerarRelatorioVendas(vendas, detalhes);
+        res.json({ periodo: { dtInicio, dtFim }, ...relatorio });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/relatorio/clientes', microvixAuth, async (req, res) => {
+    try {
+        const timestamp = req.query.timestamp || 0;
+        const clientes = await microvix.getClientes(timestamp);
+        const relatorio = reports.gerarRelatorioClientes(clientes);
+        res.json(relatorio);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/microvix/relatorio/produtos', microvixAuth, async (req, res) => {
+    try {
+        const timestamp = req.query.timestamp || 0;
+        const produtos = await microvix.getProdutos(timestamp);
+        const relatorio = reports.gerarRelatorioProdutos(produtos);
+        res.json(relatorio);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ─── Fim Rotas Microvix ───────────────────────────────────────────────────────
 
 // Porta dinâmica para o ambiente do Render [cite: 33, 167]
 const PORT = process.env.PORT || 3000;
