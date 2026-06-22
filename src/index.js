@@ -3,6 +3,8 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const microvix = require('./microvix');
+const reports = require('./reports');
 
 const app = express();
 
@@ -124,6 +126,133 @@ app.post('/webhook', async (req, res) => {
 
     } catch (err) {
         console.error('[Claudio] Erro inesperado:', err.message);
+    }
+});
+
+/**
+ * Rotas de Extração de Dados e Relatórios - Microvix
+ * Requerem autenticação via API_KEY (header 'apikey')
+ */
+
+const TIPOS_RELATORIO = {
+    pedidos: { buscar: microvix.buscarPedidos, gerar: reports.gerarRelatorioPedidos },
+    estoque: { buscar: microvix.buscarEstoque, gerar: reports.gerarRelatorioEstoque },
+    clientes: { buscar: microvix.buscarClientes, gerar: reports.gerarRelatorioClientes },
+    financeiro: { buscar: microvix.buscarFinanceiro, gerar: reports.gerarRelatorioFinanceiro }
+};
+
+// GET /microvix/:tipo - Extrai dados do Microvix e retorna relatório formatado
+app.get('/microvix/:tipo', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const tipo = req.params.tipo.toLowerCase();
+    const handler = TIPOS_RELATORIO[tipo];
+
+    if (!handler) {
+        return res.status(400).json({
+            error: 'Tipo de relatório inválido.',
+            tipos_disponiveis: Object.keys(TIPOS_RELATORIO)
+        });
+    }
+
+    try {
+        const dados = await handler.buscar(req.query);
+        const formato = req.query.formato || 'json';
+
+        if (formato === 'texto') {
+            const texto = handler.gerar(dados);
+            return res.status(200).type('text/plain').send(texto);
+        }
+
+        return res.status(200).json({
+            tipo,
+            total: Array.isArray(dados) ? dados.length : (dados?.data?.length || 0),
+            gerado_em: new Date().toISOString(),
+            dados
+        });
+    } catch (err) {
+        console.error(`[Microvix] Erro ao buscar ${tipo}:`, err.message);
+        return res.status(502).json({
+            error: 'Falha ao comunicar com a API Microvix.',
+            detalhe: err.message
+        });
+    }
+});
+
+// POST /microvix/relatorio/whatsapp - Gera relatório e envia via WhatsApp
+app.post('/microvix/relatorio/whatsapp', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { tipo, phone } = req.body;
+    if (!tipo || !phone) {
+        return res.status(400).json({ error: 'Campos obrigatórios: tipo, phone' });
+    }
+
+    const handler = TIPOS_RELATORIO[tipo.toLowerCase()];
+    if (!handler) {
+        return res.status(400).json({
+            error: 'Tipo de relatório inválido.',
+            tipos_disponiveis: Object.keys(TIPOS_RELATORIO)
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: `Relatório de ${tipo} sendo gerado e enviado para ${phone}...`,
+        timestamp: new Date().toISOString()
+    });
+
+    try {
+        const dados = await handler.buscar(req.query);
+        const texto = handler.gerar(dados);
+
+        if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
+            console.error('[Microvix] Evolution API não configurada.');
+            return;
+        }
+
+        const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
+        let parsedUrl;
+        try { parsedUrl = new URL(endpoint); } catch (e) {
+            console.error('[Microvix] URL inválida da Evolution API:', e.message);
+            return;
+        }
+
+        const payload = JSON.stringify({ number: phone, text: texto });
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+            path: parsedUrl.pathname,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': EVOLUTION_API_KEY,
+                'Content-Length': Buffer.byteLength(payload)
+            }
+        };
+
+        const lib = parsedUrl.protocol === 'https:' ? https : http;
+        const request = lib.request(options, (response) => {
+            let data = '';
+            response.on('data', (chunk) => { data += chunk; });
+            response.on('end', () => {
+                console.log(`[Microvix] Relatório de ${tipo} enviado para ${phone}. Status: ${response.statusCode}`);
+            });
+        });
+        request.on('error', (err) => {
+            console.error('[Microvix] Erro ao enviar relatório via WhatsApp:', err.message);
+        });
+        request.write(payload);
+        request.end();
+
+    } catch (err) {
+        console.error(`[Microvix] Erro ao gerar relatório de ${tipo}:`, err.message);
     }
 });
 
