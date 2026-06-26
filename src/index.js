@@ -3,6 +3,8 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const microvix = require('./microvix');
+const { gerarRelatorioPersonalizado } = require('./reports');
 
 const app = express();
 
@@ -71,26 +73,112 @@ app.post('/webhook', async (req, res) => {
     });
 
     // Envio assíncrono para a Evolution API
+    enviarWhatsApp(phone, message).catch((err) => {
+        console.error('[Claudio] Erro ao enviar para Evolution API:', err.message);
+    });
+});
+
+/**
+ * Endpoint de extração e envio de relatório via WhatsApp
+ * Body: { tipo, phone, dataInicio?, dataFim?, loja? }
+ * tipo: 'vendas' | 'estoque' | 'pedidos'
+ */
+app.post('/relatorio', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { tipo, phone, dataInicio, dataFim, loja } = req.body;
+    const tiposValidos = ['vendas', 'estoque', 'pedidos'];
+
+    if (!tipo || !tiposValidos.includes(tipo)) {
+        return res.status(400).json({
+            error: 'Campo obrigatório: tipo',
+            validos: tiposValidos
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: `Extração de ${tipo} iniciada. ${phone ? 'Relatório será enviado ao WhatsApp.' : 'Relatório retornado na resposta.'}`
+    });
+
     try {
+        const extratores = {
+            vendas: () => microvix.extrairVendas({ dataInicio, dataFim, loja }),
+            estoque: () => microvix.extrairEstoque({ loja }),
+            pedidos: () => microvix.extrairPedidos({ dataInicio, dataFim })
+        };
+
+        const dados = await extratores[tipo]();
+        const filtros = { dataInicio, dataFim, loja };
+        const relatorio = gerarRelatorioPersonalizado(tipo, dados, filtros);
+
+        console.log(`[Claudio] Relatório ${tipo} gerado:\n${relatorio}`);
+
+        if (phone && EVOLUTION_URL && EVOLUTION_API_KEY && EVOLUTION_INSTANCE) {
+            await enviarWhatsApp(phone, relatorio);
+        }
+    } catch (err) {
+        console.error(`[Claudio] Erro ao gerar relatório ${tipo}:`, err.message);
+    }
+});
+
+/**
+ * Endpoint para extrair dados brutos do Microvix (retorna JSON)
+ * Query: tipo, dataInicio?, dataFim?, loja?, pagina?
+ */
+app.get('/extracao', async (req, res) => {
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+
+    if (!apikey || apikey !== API_KEY) {
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { tipo, dataInicio, dataFim, loja, pagina } = req.query;
+    const tiposValidos = ['vendas', 'estoque', 'pedidos', 'produtos', 'clientes'];
+
+    if (!tipo || !tiposValidos.includes(tipo)) {
+        return res.status(400).json({
+            error: 'Parâmetro obrigatório: tipo',
+            validos: tiposValidos
+        });
+    }
+
+    try {
+        const extratores = {
+            vendas: () => microvix.extrairVendas({ dataInicio, dataFim, loja }),
+            estoque: () => microvix.extrairEstoque({ loja }),
+            pedidos: () => microvix.extrairPedidos({ dataInicio, dataFim }),
+            produtos: () => microvix.extrairProdutos({ pagina: pagina || 1 }),
+            clientes: () => microvix.extrairClientes({ pagina: pagina || 1 })
+        };
+
+        const dados = await extratores[tipo]();
+        return res.status(200).json({ status: 'success', tipo, dados });
+    } catch (err) {
+        console.error(`[Claudio] Erro na extração ${tipo}:`, err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+function enviarWhatsApp(phone, message) {
+    return new Promise((resolve, reject) => {
         if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
-            console.error('ERRO: Variáveis de ambiente da Evolution API não configuradas.');
-            return;
+            return reject(new Error('Variáveis da Evolution API não configuradas.'));
         }
 
-        // Montagem e validação da URL [cite: 22, 132]
         let parsedUrl;
         try {
-            const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`;
-            parsedUrl = new URL(endpoint);
+            parsedUrl = new URL(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`);
         } catch (err) {
-            console.error('ERRO: URL inválida da Evolution API:', err.message);
-            return;
+            return reject(new Error(`URL inválida da Evolution API: ${err.message}`));
         }
 
-        const payload = JSON.stringify({
-            number: phone,
-            text: message
-        });
+        const payload = JSON.stringify({ number: phone, text: message });
+        const lib = parsedUrl.protocol === 'https:' ? https : http;
 
         const options = {
             hostname: parsedUrl.hostname,
@@ -104,28 +192,20 @@ app.post('/webhook', async (req, res) => {
             }
         };
 
-        const lib = parsedUrl.protocol === 'https:' ? https : http;
-
-        const request = lib.request(options, (response) => {
+        const req = lib.request(options, (response) => {
             let data = '';
             response.on('data', (chunk) => { data += chunk; });
             response.on('end', () => {
-                // Uso correto de crases para template literals 
-                console.log(`[Claudio] Mensagem enviada para ${phone}. Status: ${response.statusCode}. Resposta: ${data}`);
+                console.log(`[Claudio] WhatsApp ${phone}. Status: ${response.statusCode}`);
+                resolve(data);
             });
         });
 
-        request.on('error', (err) => {
-            console.error('[Claudio] Erro ao enviar para Evolution API:', err.message);
-        });
-
-        request.write(payload);
-        request.end();
-
-    } catch (err) {
-        console.error('[Claudio] Erro inesperado:', err.message);
-    }
-});
+        req.on('error', reject);
+        req.write(payload);
+        req.end();
+    });
+}
 
 // Porta dinâmica para o ambiente do Render [cite: 33, 167]
 const PORT = process.env.PORT || 3000;
