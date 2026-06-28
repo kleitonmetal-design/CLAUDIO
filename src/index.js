@@ -3,6 +3,7 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const { gerarRelatorioVendas, gerarRelatorioProdutos, gerarRelatorioClientes, gerarRelatorioCompleto } = require('./reports');
 
 const app = express();
 
@@ -12,9 +13,52 @@ app.use(express.json());
 
 // Variáveis de ambiente
 const API_KEY = process.env.API_KEY || 'chave_reserva_seguranca';
-const EVOLUTION_URL = process.env.EVOLUTION_URL; 
+const EVOLUTION_URL = process.env.EVOLUTION_URL;
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE;
+
+function autenticar(req, res, next) {
+  const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+  if (!apikey || apikey !== API_KEY) {
+    return res.status(401).json({ error: 'Não autorizado.' });
+  }
+  next();
+}
+
+function enviarWhatsApp(phone, text) {
+  return new Promise((resolve, reject) => {
+    if (!EVOLUTION_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
+      return reject(new Error('Variáveis da Evolution API não configuradas.'));
+    }
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`);
+    } catch (e) {
+      return reject(new Error('URL inválida da Evolution API.'));
+    }
+    const payload = JSON.stringify({ number: phone, text });
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+      path: parsedUrl.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    const lib = parsedUrl.protocol === 'https:' ? https : http;
+    const req = lib.request(options, (res) => {
+      let data = '';
+      res.on('data', (c) => { data += c; });
+      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
 
 /**
  * Rota de Diagnóstico (Raiz)
@@ -30,6 +74,73 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.status(200).send('API do Claudio: Operacional e Segura');
 });
+
+// ── Rotas Microvix ──────────────────────────────────────────────────────────
+
+app.get('/microvix/relatorio/vendas', autenticar, async (req, res) => {
+  const periodo = ['hoje', 'semana', 'mes'].includes(req.query.periodo) ? req.query.periodo : 'hoje';
+  try {
+    const relatorio = await gerarRelatorioVendas(periodo);
+    res.json({ ok: true, relatorio });
+  } catch (err) {
+    console.error('[Microvix] Erro vendas:', err.message);
+    res.status(502).json({ error: 'Falha ao consultar dados do Microvix.', detalhe: err.message });
+  }
+});
+
+app.get('/microvix/relatorio/produtos', autenticar, async (req, res) => {
+  try {
+    const relatorio = await gerarRelatorioProdutos();
+    res.json({ ok: true, relatorio });
+  } catch (err) {
+    console.error('[Microvix] Erro produtos:', err.message);
+    res.status(502).json({ error: 'Falha ao consultar dados do Microvix.', detalhe: err.message });
+  }
+});
+
+app.get('/microvix/relatorio/clientes', autenticar, async (req, res) => {
+  try {
+    const relatorio = await gerarRelatorioClientes();
+    res.json({ ok: true, relatorio });
+  } catch (err) {
+    console.error('[Microvix] Erro clientes:', err.message);
+    res.status(502).json({ error: 'Falha ao consultar dados do Microvix.', detalhe: err.message });
+  }
+});
+
+app.get('/microvix/relatorio/completo', autenticar, async (req, res) => {
+  const periodo = ['hoje', 'semana', 'mes'].includes(req.query.periodo) ? req.query.periodo : 'hoje';
+  try {
+    const relatorio = await gerarRelatorioCompleto(periodo);
+    res.json({ ok: true, relatorio });
+  } catch (err) {
+    console.error('[Microvix] Erro completo:', err.message);
+    res.status(502).json({ error: 'Falha ao consultar dados do Microvix.', detalhe: err.message });
+  }
+});
+
+app.post('/microvix/relatorio/enviar', autenticar, async (req, res) => {
+  const { phone, tipo = 'completo', periodo = 'hoje' } = req.body;
+  if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+    return res.status(400).json({ error: 'Campo obrigatório: phone' });
+  }
+  try {
+    let relatorio;
+    if (tipo === 'vendas')   relatorio = await gerarRelatorioVendas(periodo);
+    else if (tipo === 'produtos') relatorio = await gerarRelatorioProdutos();
+    else if (tipo === 'clientes') relatorio = await gerarRelatorioClientes();
+    else                          relatorio = await gerarRelatorioCompleto(periodo);
+
+    await enviarWhatsApp(phone.trim(), relatorio.texto);
+    console.log(`[Microvix] Relatório "${tipo}" enviado para ${phone}`);
+    res.json({ ok: true, message: 'Relatório enviado via WhatsApp.' });
+  } catch (err) {
+    console.error('[Microvix] Erro ao enviar relatório:', err.message);
+    res.status(500).json({ error: 'Falha ao gerar ou enviar relatório.', detalhe: err.message });
+  }
+});
+
+// ── Webhook ──────────────────────────────────────────────────────────────────
 
 /**
  * Rota do Webhook
