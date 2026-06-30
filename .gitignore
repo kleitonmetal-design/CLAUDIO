@@ -26,3 +26,9 @@ TestResults.xml
 node_modules/
 .wwebjs_auth/
 .wwebjs_cache/
+
+# Relatórios gerados
+reports/
+
+# Variáveis de ambiente
+.env
