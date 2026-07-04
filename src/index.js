@@ -3,6 +3,8 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const microvix = require('./microvix');
+const relatorios = require('./relatorios');
 
 const app = express();
 
@@ -124,6 +126,53 @@ app.post('/webhook', async (req, res) => {
 
     } catch (err) {
         console.error('[Claudio] Erro inesperado:', err.message);
+    }
+});
+
+/**
+ * Rota de Extração de Dados do Microvix e Geração de Relatório
+ * Consulta o WebService do Microvix e devolve um relatório resumido em JSON.
+ */
+app.get('/relatorios/microvix/clientes-fornecedores', async (req, res) => {
+    // Verificação de Autenticação
+    const apikey = req.headers['apikey'] || req.headers['x-apikey'];
+
+    if (!apikey || apikey !== API_KEY) {
+        console.error('ALERTA: Tentativa de acesso sem chave válida.');
+        return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const { cnpjEmp, dataInicial, dataFim } = req.query;
+
+    const errors = [];
+    if (!cnpjEmp || typeof cnpjEmp !== 'string' || cnpjEmp.trim() === '') {
+        errors.push('Parâmetro obrigatório: cnpjEmp');
+    }
+    if (!dataInicial || typeof dataInicial !== 'string' || dataInicial.trim() === '') {
+        errors.push('Parâmetro obrigatório: dataInicial');
+    }
+    if (!dataFim || typeof dataFim !== 'string' || dataFim.trim() === '') {
+        errors.push('Parâmetro obrigatório: dataFim');
+    }
+
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validação falhou',
+            details: errors
+        });
+    }
+
+    try {
+        const csvBruto = await microvix.obterClientesFornecedores({ cnpjEmp, dataInicial, dataFim });
+        const registros = relatorios.parseCsv(csvBruto);
+
+        res.status(200).json({
+            resumo: relatorios.gerarRelatorioResumo(registros),
+            registros
+        });
+    } catch (err) {
+        console.error('[Claudio] Erro ao extrair dados do Microvix:', err.message);
+        res.status(502).json({ error: 'Falha ao consultar a API do Microvix.', details: err.message });
     }
 });
 
