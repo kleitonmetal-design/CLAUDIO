@@ -1,0 +1,180 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Simulado D3 Planejamento</title>
+<style>
+:root{--bg:#fbfaf6;--fg:#1c1f26;--muted:#4a5060;--line:#6b7280;--accent:#1d5fa8;--accent-fg:#ffffff;--surface:#ffffff;--hover:#e8f0fa;--ok:#1b7a3a;--ok-bg:#e3f3e8;--bad:#b3261e;--bad-bg:#fbe6e3;--note-bg:#e8f0fa;--case-bg:#f1eee4;--track:#d9dce3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}
+body{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;background:var(--bg);color:var(--fg);padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:Verdana,Arial,sans-serif;margin:1.5rem 0 .75rem;text-align:left;text-wrap:balance}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}
+p{margin:0 0 1rem;text-align:left}
+.bar{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:.5rem 0 1rem}
+.bar>div{height:100%;background:var(--accent);width:0}
+.tag{display:inline-block;padding:.25rem .75rem;border:2px solid var(--accent);border-radius:6px;margin:0 .5rem .75rem 0}
+button{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;width:100%;padding:.75rem 1rem;margin:0 0 .75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){background:var(--hover)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{color:var(--fg);opacity:1}
+button.ok{border-color:var(--ok);background:var(--ok-bg)}
+button.bad{border-color:var(--bad);background:var(--bad-bg)}
+button.next{width:auto;background:var(--accent);color:var(--accent-fg);border-color:var(--accent);text-align:center}
+.fb{padding:.75rem 1rem;border-left:6px solid var(--accent);background:var(--note-bg);margin:1rem 0}
+.case{padding:1rem;border:2px solid var(--line);border-radius:8px;background:var(--case-bg);margin:0 0 1rem}
+.case h3{margin-top:0}
+.hidden{display:none!important}
+</style>
+<main>
+  <h1>Domínio 3: Planejamento da implementação</h1>
+  <div id="intro">
+    <p>30 questões: 10 de estudo de caso (5 casos, 2 perguntas cada) e 20 perguntas diretas.</p>
+    <p>Nos casos, leia o texto inteiro antes de responder. O texto fica visível durante as duas perguntas.</p>
+    <p>Sua meta: 80% neste domínio. Resultado anterior: 50%.</p>
+    <button class="next" id="start">Começar</button>
+  </div>
+  <div id="quiz" class="hidden">
+    <p id="progress"></p>
+    <div class="bar"><div id="fill"></div></div>
+    <span class="tag" id="part"></span>
+    <div id="case" class="case hidden"></div>
+    <h2 id="q"></h2>
+    <div id="opts"></div>
+    <div id="fb" class="fb hidden"></div>
+    <button class="next hidden" id="next">Próxima</button>
+  </div>
+  <div id="mid" class="hidden"></div>
+  <div id="result" class="hidden"></div>
+</main>
+<script>
+var META = {
+  dom: 3,
+  title: "Simulado D3 Planejamento",
+  name: "Domínio 3: Planejamento da implementação",
+  base: 50
+};
+var CASES = [
+{t:"Caso 1: Seguradora Aurora, definição do escopo",p:[
+"A Seguradora Aurora tem três linhas de negócio: automóvel, vida e saúde. A regulação de sinistros é feita pela empresa terceirizada ClaimTech. A Aurora usa um CRM em nuvem e opera dois data centers, um deles antigo e em processo de desativação. Está sujeita à LGPD e às normas do regulador de seguros.",
+"A diretoria quer certificar apenas a “venda online de seguro de vida”. Porém, a plataforma de vendas usa o mesmo provedor de identidade das outras linhas, é monitorada pelo mesmo centro de operações de segurança (SOC) e consulta dados da linha de saúde para precificar o risco. O projeto está em fase de planejamento e o líder do projeto precisa propor o escopo."]},
+{t:"Caso 2: Lumina Varejo, riscos e critérios",p:[
+"A Lumina usa a ISO/IEC 27005 com avaliação por cenários, matriz 5 por 5 (probabilidade e impacto) e critério de aceitação aprovado pela direção: riscos até 6 pontos podem ser aceitos. O cenário “ransomware nas lojas” foi avaliado com impacto 5 e probabilidade 3, resultando em 15 pontos.",
+"Foram propostas três opções: segmentar a rede das lojas, contratar seguro cibernético e encerrar o e-commerce. O diretor financeiro pede para aceitar o risco do sistema de caixa (12 pontos) porque não há orçamento. O sistema de caixa não tem dono do risco nomeado."]},
+{t:"Caso 3: HealthLink, plano do projeto",p:[
+"A HealthLink é uma startup de saúde digital com 80 funcionários. Ela precisa do certificado ISO/IEC 27001 em 6 meses para fechar contrato com uma rede de hospitais. Ninguém na equipe tem experiência com a norma. O CEO propõe “copiar um conjunto de políticas de um modelo da internet e já agendar a auditoria”.",
+"A análise de lacunas mostrou que cerca de 60% dos requisitos não são atendidos. Não há avaliação de riscos, a política não foi aprovada pela diretoria e o CTO pode dedicar apenas 20% do seu tempo ao projeto. O orçamento é limitado."]},
+{t:"Caso 4: Agência Municipal de Dados, objetivos e responsabilidades",p:[
+"A Agência Municipal de Dados guarda informações de cidadãos. A política foi aprovada, e agora a equipe precisa definir os objetivos de segurança da informação. Os rascunhos foram: “ser a agência mais segura do país”, “zero incidentes para sempre”, “comprar uma ferramenta de monitoramento” e “reduzir de 12 horas para 4 horas o tempo médio de resolução de incidentes críticos em 12 meses, com o gerente de segurança como responsável e orçamento previsto”.",
+"Além disso, a secretaria propõe delegar toda a responsabilidade pelo SGSI ao departamento de TI, com a justificativa de que “segurança é assunto técnico”. O gerente de segurança de TI se reporta ao diretor de TI."]},
+{t:"Caso 5: Cooperativa Agrofin, tratamento de riscos e SoA",p:[
+"A avaliação de riscos da Agrofin identificou 42 riscos, 9 deles altos. A equipe escolheu controles olhando primeiro o Anexo A e produziu um SoA com 70 controles. Os controles físicos da sede foram excluídos com a justificativa “nosso data center é em nuvem”, mas a sede mantém 3 servidores em uma sala com porta comum.",
+"A análise também mostrou um risco de fraude em transferências instantâneas (PIX) para o qual não existe controle específico no Anexo A. O consultor sugere ignorar o risco, “pois o Anexo A não cobre”."]}
+];
+var Q = [
+{c:0,q:"Qual proposta de escopo é a mais adequada para a Aurora?",o:["Definir o escopo incluindo as interfaces e dependências (provedor de identidade, SOC, dados de saúde, ClaimTech), documentando o que fica dentro e fora com justificativa","Restringir ao site de vendas e ignorar tudo o que ele usa","Incluir todas as linhas de negócio sem analisar dependências","Deixar o escopo em aberto até a auditoria"],e:"A cláusula 4.3 exige considerar questões internas e externas, partes interessadas, interfaces e dependências. O escopo deve estar documentado com limites claros."},
+{c:0,q:"Qual afirmação sobre as partes interessadas e seus requisitos (cláusula 4.2) é correta para a Aurora?",o:["A organização determina as partes interessadas relevantes e quais de seus requisitos, incluindo legais, regulatórios e contratuais, serão tratados pelo SGSI","Só os requisitos do regulador importam","Requisitos de clientes não precisam ser considerados","Os requisitos são definidos pela certificadora"],e:"A cláusula 4.2 pede determinar as partes interessadas, seus requisitos e quais serão tratados pelo SGSI."},
+{c:1,q:"Como tratar o pedido do diretor financeiro de aceitar o risco de 12 pontos do sistema de caixa?",o:["A aceitação informal não é válida: exige dono do risco nomeado, justificativa documentada e aprovação conforme os critérios, ou a revisão formal dos critérios","Aceitar, pois a direção financeira decide","Aceitar sem registro","Ignorar o risco para não afetar o orçamento"],e:"O critério de aceitação foi definido em 6. Aceitar 12 exige processo formal: dono do risco, justificativa e aprovação conforme a governança, ou alteração dos critérios."},
+{c:1,q:"Sobre contratar seguro cibernético para o cenário de ransomware, qual afirmação é correta?",o:["Compartilha parte do impacto financeiro, mas não elimina o risco; o risco residual deve ser reavaliado, incluindo efeitos operacionais e de reputação","Elimina totalmente o risco","Dispensa o plano de tratamento","Equivale a evitar o risco"],e:"O seguro é a opção de compartilhar. Efeitos operacionais, legais e de imagem permanecem e compõem o risco residual."},
+{c:2,q:"Qual é a primeira ação recomendada para planejar o projeto da HealthLink?",o:["Obter compromisso formal da direção com recursos, definir escopo, objetivos, equipe e plano com marcos realistas","Agendar a auditoria de certificação","Comprar ferramentas de segurança","Copiar as políticas e treinar os funcionários"],e:"O sucesso do SGSI depende de liderança e recursos (cláusulas 5.1 e 7.1). Escopo, equipe e plano vêm logo em seguida."},
+{c:2,q:"Qual é o principal risco de copiar um conjunto de políticas de um modelo da internet?",o:["As políticas não refletirão contexto, riscos e processos da organização, falhando na eficácia e na auditoria","O custo será muito alto","A certificadora recusará qualquer política","Modelos são proibidos pela norma"],e:"Documentos genéricos não cumprem requisitos como contexto (4.1), riscos (6.1) e escopo (4.3). O SGSI precisa ser adaptado à organização."},
+{c:3,q:"Qual dos objetivos propostos atende melhor à cláusula 6.2?",o:["Reduzir de 12 para 4 horas o tempo médio de resolução de incidentes críticos em 12 meses, com responsável e orçamento","Ser a agência mais segura do país","Ter zero incidentes para sempre","Comprar uma ferramenta de monitoramento"],e:"Objetivos devem ser mensuráveis quando praticável, coerentes com a política, ter responsável, prazo, recursos e forma de avaliação."},
+{c:3,q:"Qual é a análise correta da proposta de delegar toda a responsabilidade ao departamento de TI?",o:["A alta direção deve demonstrar liderança, integrar o SGSI aos processos de negócio, prover recursos e atribuir papéis; a execução pode ser delegada, a responsabilidade da direção não","A delegação é totalmente correta","A alta direção só precisa assinar a política","A responsabilidade é do auditor"],e:"As cláusulas 5.1 e 5.3 atribuem à alta direção liderança e atribuição de papéis. Segurança da informação envolve toda a organização."},
+{c:4,q:"Qual é a abordagem correta para selecionar controles na Agrofin?",o:["Determinar todos os controles necessários para tratar os riscos, de qualquer fonte, comparar com o Anexo A para não omitir nenhum necessário e documentar justificativas no SoA","Escolher 70 controles do Anexo A e pronto","Incluir todos os controles do Anexo A sem análise","Excluir controles físicos sempre que houver nuvem"],e:"A cláusula 6.1.3 pede determinar os controles necessários, compará-los com o Anexo A e justificar inclusões e exclusões no SoA."},
+{c:4,q:"Qual é o tratamento correto do risco de fraude em transferências instantâneas?",o:["Tratar o risco e incluir controles adicionais no plano e no SoA, pois controles podem vir de qualquer fonte","Ignorar, pois o Anexo A não cobre","Reter o risco sem avaliação","Pedir à certificadora que crie um controle"],e:"O Anexo A não é exaustivo. A organização pode definir controles adicionais necessários ao tratamento dos riscos."},
+{c:null,q:"Ao planejar o SGSI, a organização deve determinar riscos e oportunidades para quê, conforme a cláusula 6.1.1?",o:["Assegurar que o SGSI atinja os resultados pretendidos, prevenir ou reduzir efeitos indesejados e alcançar melhoria contínua","Apenas para calcular o orçamento","Apenas para a certificadora","Apenas para definir o escopo"],e:"A cláusula 6.1.1 liga riscos e oportunidades aos resultados pretendidos, à prevenção de efeitos indesejados e à melhoria contínua."},
+{c:null,q:"Qual é a diferença entre critérios de aceitação e critérios de avaliação de riscos (cláusula 6.1.2)?",o:["Os de aceitação definem o que pode ser retido; os de avaliação definem como estimar e comparar riscos","São a mesma coisa","Os de avaliação definem o orçamento","Os de aceitação são definidos pela certificadora"],e:"A cláusula 6.1.2 exige critérios para aceitar riscos e critérios para executar avaliações de riscos."},
+{c:null,q:"Na ISO/IEC 27001:2022, qual afirmação sobre a identificação de riscos é correta?",o:["A norma não exige abordagem por ativos; é possível usar cenários de eventos","A abordagem por ativos, ameaças e vulnerabilidades é obrigatória","Só abordagem quantitativa é permitida","A identificação de riscos é opcional"],e:"A edição 2022 exige identificar riscos de perda de confidencialidade, integridade e disponibilidade, sem impor abordagem por ativos."},
+{c:null,q:"Qual exemplo corresponde à opção de tratamento “evitar” o risco?",o:["Descontinuar o serviço que origina o risco","Contratar seguro","Instalar um firewall","Aceitar o risco com aprovação"],e:"Evitar elimina a atividade que gera o risco. Seguro compartilha, firewall modifica e aprovação é reter."},
+{c:null,q:"Qual é a diferença entre o plano de tratamento de riscos e o SoA?",o:["O plano define ações, responsáveis, prazos e recursos; o SoA lista controles necessários com justificativas de inclusão, implementação e exclusão","São o mesmo documento","O SoA define orçamento","O plano de tratamento só trata riscos baixos"],e:"Os dois são complementares. O SoA é um documento exigido e o plano orienta a execução."},
+{c:null,q:"O que o SoA deve conter, conforme a cláusula 6.1.3?",o:["Controles necessários, justificativa de inclusão, status de implementação e justificativa das exclusões do Anexo A","Apenas os controles implementados","Apenas controles técnicos","Somente a lista de ativos"],e:"O SoA deve mostrar o raciocínio sobre controles e os status, inclusive os excluídos com justificativa."},
+{c:null,q:"Qual é a relação entre a política e os objetivos de segurança da informação?",o:["A política fornece a estrutura para estabelecer os objetivos, e os objetivos devem ser coerentes com ela","São independentes","Os objetivos substituem a política","A política só vale para TI"],e:"A cláusula 5.2 diz que a política fornece estrutura para objetivos. A cláusula 6.2 pede coerência."},
+{c:null,q:"O que o planejamento para atingir os objetivos (cláusula 6.2) deve determinar?",o:["O que será feito, recursos, responsável, prazo e como os resultados serão avaliados","Apenas a data","Apenas o orçamento","Apenas o responsável"],e:"A cláusula 6.2 pede o que, recursos, responsável, quando e como avaliar."},
+{c:null,q:"Qual informação documentada deve ser retida sobre a avaliação de riscos?",o:["Os resultados da avaliação, além da informação sobre o processo de avaliação","Nada, pois o processo é verbal","Apenas o nome do avaliador","Apenas o relatório da certificadora"],e:"A cláusula 6.1.2 exige reter informação documentada sobre o processo e seus resultados."},
+{c:null,q:"Qual requisito se aplica ao escopo do SGSI?",o:["Estar disponível como informação documentada, com limites claros e consideração de interfaces e dependências","Ser secreto","Ser definido pelo auditor","Ser igual ao organograma"],e:"A cláusula 4.3 pede que o escopo seja informação documentada, com limites e aplicabilidade."},
+{c:null,q:"Qual atividade deve ocorrer antes de realizar a avaliação de riscos?",o:["Definir a metodologia e os critérios de avaliação e aceitação de riscos","Contratar a certificadora","Redigir relatório final","Encerrar o projeto"],e:"Metodologia e critérios devem existir antes para garantir resultados consistentes, válidos e comparáveis."},
+{c:null,q:"Quem pode ser considerado dono do risco?",o:["Pessoa ou entidade com responsabilidade e autoridade para gerir o risco","Qualquer funcionário de TI","O auditor externo","O consultor"],e:"A norma exige dono do risco, com responsabilidade e autoridade para tratar e aceitar."},
+{c:null,q:"Quando o planejamento de mudanças (cláusula 6.3) é exigido?",o:["Quando a organização determina a necessidade de mudanças no SGSI, que devem ser realizadas de forma planejada","Somente na primeira certificação","Somente após incidente","Nunca"],e:"A cláusula 6.3 foi incluída na versão 2022 para disciplinar mudanças no SGSI."},
+{c:null,q:"Qual alternativa lista apenas questões externas segundo a cláusula 4.1?",o:["Mudança regulatória, ameaças cibernéticas emergentes e condições de mercado","Cultura organizacional, governança e capacidades","Cultura organizacional e legislação","Estrutura interna e recursos internos"],e:"Questões externas vêm de fora da organização. Cultura, governança e capacidades são internas."},
+{c:null,q:"Por que a análise de lacunas não substitui a avaliação de riscos?",o:["A análise compara a situação atual com os requisitos; a avaliação de riscos identifica riscos específicos que orientam a escolha de controles","Porque a análise é proibida","Porque a avaliação de riscos é opcional","Porque a análise só vale para TI"],e:"São atividades diferentes e complementares. Os controles dependem dos riscos."},
+{c:null,q:"Qual critério de impacto é coerente com a avaliação de riscos de segurança da informação?",o:["Consequências para a organização, como operação, finanças, legal e reputação, ligadas à perda de confidencialidade, integridade e disponibilidade","Apenas o número de computadores afetados","Apenas o custo do antivírus","Apenas o tamanho da empresa"],e:"O impacto considera as consequências para a organização da perda de C, I e D."},
+{c:null,q:"Qual lista contém apenas informações documentadas exigidas pelas cláusulas de planejamento e operação?",o:["Processo de avaliação de riscos, processo de tratamento de riscos, SoA, objetivos e resultados da avaliação e do tratamento","Contratos de trabalho e organograma","Lista de fornecedores e atas","Relatórios financeiros"],e:"Esses itens são exigidos pelas cláusulas 6 e 8."},
+{c:null,q:"Qual evento exige rever o planejamento do SGSI?",o:["Mudanças significativas no contexto, como aquisição de empresa, novo serviço em nuvem ou nova regulação","Troca de móveis","Mudança de cor do site","Contratação de recepcionista"],e:"Mudanças relevantes alteram o contexto, os riscos e o escopo."},
+{c:null,q:"Qual distribuição de controles do Anexo A da ISO/IEC 27001:2022 está correta?",o:["37 organizacionais, 8 de pessoas, 14 físicos e 34 tecnológicos","93 organizacionais","14 organizacionais, 37 físicos, 8 pessoas e 34 tecnológicos","114 em 14 grupos"],e:"A soma é 93 controles, divididos em quatro temas."},
+{c:null,q:"Qual dos atributos de controle faz parte da ISO/IEC 27002:2022?",o:["Tipo de controle: preventivo, detectivo ou corretivo","Cor do controle","Número de funcionários","Preço do controle"],e:"A ISO/IEC 27002:2022 usa atributos como tipo de controle, propriedades de segurança da informação e conceitos de cibersegurança."}
+];
+
+var GOAL = 80;
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".",",") + "%"; }
+function shuffle(a){ a = a.slice(); for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var $ = function(id){ return document.getElementById(id); };
+var idx = 0, hits = {c:0, d:0}, tot = {c:0, d:0}, misses = [];
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function show(){
+  var item = Q[idx];
+  $("progress").textContent = "Questão " + (idx+1) + " de " + Q.length;
+  $("fill").style.width = (idx/Q.length*100) + "%";
+  $("part").textContent = item.c !== null ? "Estudo de caso " + (item.c+1) + " de " + CASES.length : "Pergunta direta";
+  var cb = $("case");
+  if (item.c !== null){
+    var cs = CASES[item.c];
+    cb.innerHTML = "<h3>" + esc(cs.t) + "</h3>" + cs.p.map(function(x){ return "<p>" + esc(x) + "</p>"; }).join("");
+    cb.className = "case";
+  } else { cb.className = "case hidden"; }
+  $("q").textContent = item.q;
+  $("fb").className = "fb hidden";
+  $("next").className = "next hidden";
+  var correct = item.o[0], box = $("opts"); box.innerHTML = "";
+  shuffle(item.o).forEach(function(t){
+    var b = document.createElement("button");
+    b.textContent = t;
+    b.onclick = function(){ answer(b, t === correct, correct, item); };
+    box.appendChild(b);
+  });
+}
+function answer(btn, ok, correct, item){
+  var k = item.c !== null ? "c" : "d";
+  tot[k]++; if (ok) hits[k]++; else misses.push({n: idx+1, q: item.q, a: correct, e: item.e});
+  var bs = $("opts").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++){ bs[i].disabled = true; if (bs[i].textContent === correct) bs[i].className = "ok"; }
+  if (!ok) btn.className = "bad";
+  var fb = $("fb");
+  fb.textContent = (ok ? "Correto. " : "Incorreto. A resposta certa está em verde. ") + item.e;
+  fb.className = "fb";
+  $("next").textContent = idx === Q.length-1 ? "Ver resultado" : "Próxima";
+  $("next").className = "next";
+}
+function summary(h, t){ var p = t ? h/t*100 : 0; return fmt(p) + " (" + h + " de " + t + ")"; }
+function midFeedback(){
+  $("quiz").className = "hidden";
+  var m = $("mid"); m.className = "";
+  var p = hits.c/tot.c*100;
+  m.innerHTML = "<h2>Estudos de caso concluídos</h2><p>Acertos: " + summary(hits.c, tot.c) + ".</p><p>" +
+    (p >= GOAL ? "Acima da meta de 80% nos casos." : "Abaixo da meta de 80% nos casos. Releia as explicações antes das perguntas diretas.") +
+    "</p><button class='next' id='cont'>Continuar para as perguntas diretas</button>";
+  $("cont").onclick = function(){ m.className = "hidden"; $("quiz").className = ""; show(); };
+}
+function finish(){
+  $("quiz").className = "hidden";
+  var r = $("result"); r.className = "";
+  var h = hits.c + hits.d, t = tot.c + tot.d, p = h/t*100, diff = p - META.base;
+  var html = "<h2>Resultado final</h2>";
+  html += "<div class='fb'><strong>" + META.name + "</strong><br>Total: " + summary(h, t) + "<br>Estudos de caso: " + summary(hits.c, tot.c) + "<br>Perguntas diretas: " + summary(hits.d, tot.d) + "</div>";
+  html += "<p>Resultado anterior: " + fmt(META.base) + ". Agora: " + fmt(p) + ". " + (diff > 0 ? "Melhorou +" : (diff < 0 ? "Piorou " : "Ficou igual ")) + fmt(diff).replace("%"," pontos") + ".</p>";
+  html += "<p>" + (p >= GOAL ? "Meta de 80% atingida." : "Faltam " + fmt(GOAL - p).replace("%"," pontos percentuais") + " para a meta de 80%.") + "</p>";
+  if (misses.length){
+    html += "<h3>Questões para revisar (" + misses.length + ")</h3>";
+    misses.forEach(function(x){
+      html += "<div class='fb'><strong>Questão " + x.n + ".</strong> " + esc(x.q) + "<br><br><strong>Resposta certa:</strong> " + esc(x.a) + "<br><br>" + esc(x.e) + "</div>";
+    });
+  } else { html += "<p>Nenhuma questão errada.</p>"; }
+  html += "<button class='next' onclick='location.reload()'>Refazer</button>";
+  r.innerHTML = html;
+}
+$("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
+$("next").onclick = function(){
+  var wasCase = Q[idx].c !== null; idx++;
+  if (idx >= Q.length) finish();
+  else if (wasCase && Q[idx].c === null) midFeedback();
+  else show();
+};
+</script>
