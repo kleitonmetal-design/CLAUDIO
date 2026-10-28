@@ -1,29 +1,29 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulado 5 PECB ISO 27001</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Simulado PECB ISO 27001</title>
 <style>
-  body { font-family: Verdana, Arial, sans-serif; font-size: 12pt; line-height: 1.5; text-align: left; margin: 0; padding: 1rem; background: #fdfcf7; color: #1a1a1a; }
-  main { max-width: 760px; margin: 0 auto; }
-  h1, h2, h3 { font-family: Verdana, Arial, sans-serif; margin: 1.5rem 0 0.75rem; text-align: left; }
-  p { margin: 0 0 1rem; }
-  .bar { height: 14px; background: #ddd; border-radius: 7px; overflow: hidden; margin: 0.5rem 0 1rem; }
-  .bar > div { height: 100%; background: #1d5fa8; width: 0; }
-  .tag { display: inline-block; padding: 0.25rem 0.75rem; border: 2px solid #1d5fa8; border-radius: 6px; margin-bottom: 0.75rem; }
-  button { font-family: Verdana, Arial, sans-serif; font-size: 12pt; line-height: 1.5; text-align: left; width: 100%; padding: 0.75rem 1rem; margin: 0 0 0.75rem; border: 2px solid #555; border-radius: 8px; background: #fff; color: #1a1a1a; cursor: pointer; }
-  button:hover:not(:disabled) { background: #eef4fb; }
-  button.ok { border-color: #1b7a3a; background: #e6f4ea; }
-  button.bad { border-color: #b3261e; background: #fbe9e7; }
-  button.next { width: auto; background: #1d5fa8; color: #fff; border-color: #1d5fa8; text-align: center; }
-  .fb { padding: 0.75rem 1rem; border-left: 6px solid #1d5fa8; background: #eef4fb; margin: 1rem 0; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { font-family: Verdana, Arial, sans-serif; font-size: 11pt; line-height: 1.5; text-align: left; border: 2px solid #777; padding: 0.75rem; }
-  .hidden { display: none; }
+:root{--bg:#fbfaf6;--fg:#1c1f26;--muted:#4a5060;--line:#6b7280;--accent:#1d5fa8;--accent-fg:#ffffff;--surface:#ffffff;--hover:#e8f0fa;--ok:#1b7a3a;--ok-bg:#e3f3e8;--bad:#b3261e;--bad-bg:#fbe6e3;--note-bg:#e8f0fa;--track:#d9dce3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--track:#343a46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--track:#343a46;color-scheme:dark}
+body{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;background:var(--bg);color:var(--fg);padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:Verdana,Arial,sans-serif;margin:1.5rem 0 .75rem;text-align:left;text-wrap:balance}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}
+p{margin:0 0 1rem;text-align:left}
+.bar{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:.5rem 0 1rem}
+.bar>div{height:100%;background:var(--accent);width:0}
+.tag{display:inline-block;padding:.25rem .75rem;border:2px solid var(--accent);border-radius:6px;margin-bottom:.75rem}
+button{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;width:100%;padding:.75rem 1rem;margin:0 0 .75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){background:var(--hover)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{color:var(--fg);opacity:1}
+button.ok{border-color:var(--ok);background:var(--ok-bg)}
+button.bad{border-color:var(--bad);background:var(--bad-bg)}
+button.next{width:auto;background:var(--accent);color:var(--accent-fg);border-color:var(--accent);text-align:center}
+.fb{padding:.75rem 1rem;border-left:6px solid var(--accent);background:var(--note-bg);margin:1rem 0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{font-family:Verdana,Arial,sans-serif;font-size:11pt;line-height:1.5;text-align:left;border:2px solid var(--line);padding:.75rem;min-width:0}
 </style>
-</head>
-<body>
 <main>
   <h1>Simulado 5 PECB ISO/IEC 27001 Lead Implementer</h1>
   <div id="intro">
@@ -153,16 +153,14 @@ function finish(){
   var pct = Math.round(hit/all*100);
   var h = "<h2>Resultado: " + hit + " de " + all + " (" + pct + "%)</h2>";
   h += "<p>" + (pct >= 70 ? "Aprovado. Nota mínima: 70%." : "Abaixo de 70%. Revise os domínios com nota baixa.") + "</p>";
-  h += "<h3>Por domínio (pior primeiro)</h3><table><tr><th>Domínio</th><th>Acertos</th><th>%</th></tr>";
+  h += "<h3>Por domínio (pior primeiro)</h3><div class=\"tw\"><table><tr><th>Domínio</th><th>Acertos</th><th>%</th></tr>";
   var rows = order.map(function(d){ return {d:d, p: total[d] ? Math.round(score[d]/total[d]*100) : 0}; }).sort(function(a,b){return a.p-b.p;});
   rows.forEach(function(x){
     h += "<tr><td>" + DN[x.d] + "</td><td>" + score[x.d] + " de " + total[x.d] + "</td><td>" + x.p + "%" + (x.p < 70 ? " (revisar)" : "") + "</td></tr>";
   });
-  h += "</table><p></p><button class='next' onclick='location.reload()'>Refazer</button>";
+  h += "</table></div><p></p><button class='next' onclick='location.reload()'>Refazer</button>";
   r.innerHTML = h;
 }
 $("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
 $("next").onclick = function(){ idx++; if (idx >= list.length) finish(); else show(); };
 </script>
-</body>
-</html>
