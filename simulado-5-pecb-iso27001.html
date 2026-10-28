@@ -29,7 +29,8 @@ th,td{font-family:Verdana,Arial,sans-serif;font-size:11pt;line-height:1.5;text-a
   <div id="intro">
     <p>40 questões. Uma resposta correta em cada uma.</p>
     <p>Foco nos domínios mais fracos: 7, 3, 6 e 5.</p>
-    <p>Cada resposta mostra a explicação na hora. Nota mínima: 70%.</p>
+    <p>Ao fim de cada domínio, você vê sua nota e a comparação com o resultado anterior.</p>
+    <p>Cada resposta mostra a explicação na hora. Sua meta: 80% em cada domínio.</p>
     <button class="next" id="start">Começar</button>
   </div>
   <div id="quiz" class="hidden">
@@ -41,6 +42,7 @@ th,td{font-family:Verdana,Arial,sans-serif;font-size:11pt;line-height:1.5;text-a
     <div id="fb" class="fb hidden"></div>
     <button class="next hidden" id="next">Próxima</button>
   </div>
+  <div id="dfeed" class="hidden"></div>
   <div id="result" class="hidden"></div>
 </main>
 <script>
@@ -53,6 +55,16 @@ var DN = {
   6: "Domínio 6: Melhoria contínua",
   7: "Domínio 7: Preparação para auditoria de certificação"
 };
+var BASE = {1:86.67,2:83.33,3:50,4:71.43,5:60,6:50,7:20};
+var GOAL = 80;
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".",",") + "%"; }
+function cmp(d){
+  var p = total[d] ? score[d]/total[d]*100 : 0, b = BASE[d], diff = p - b;
+  var sign = diff > 0 ? "+" : "";
+  var gap = p >= GOAL ? "Meta de 80% atingida." : "Faltam " + fmt(GOAL - p).replace("%"," pontos percentuais") + " para a meta de 80%.";
+  var trend = diff > 0 ? "Melhorou" : (diff < 0 ? "Piorou" : "Ficou igual");
+  return {p:p, b:b, diff:diff, line:"Resultado anterior: " + fmt(b) + ". Agora: " + fmt(p) + ". " + trend + " " + sign + fmt(diff).replace("%"," pontos") + ".", gap:gap};
+}
 var Q = [
 // Domínio 7
 {d:7,q:"A Alfa Ltda pediu a certificação ISO/IEC 27001. O auditor da certificadora chegou para a Etapa 1. Qual é o objetivo principal dessa etapa?",o:["Avaliar a documentação e a prontidão da organização para a Etapa 2","Testar se todos os controles funcionam na prática","Emitir o certificado se a documentação estiver completa","Corrigir as falhas encontradas no SGSI"],e:"A Etapa 1 verifica escopo, documentação e prontidão. A eficácia na prática é testada na Etapa 2. O certificado só é decidido depois da Etapa 2."},
@@ -152,15 +164,30 @@ function finish(){
   order.forEach(function(d){ all += total[d]; hit += score[d]; });
   var pct = Math.round(hit/all*100);
   var h = "<h2>Resultado: " + hit + " de " + all + " (" + pct + "%)</h2>";
-  h += "<p>" + (pct >= 70 ? "Aprovado. Nota mínima: 70%." : "Abaixo de 70%. Revise os domínios com nota baixa.") + "</p>";
-  h += "<h3>Por domínio (pior primeiro)</h3><div class=\"tw\"><table><tr><th>Domínio</th><th>Acertos</th><th>%</th></tr>";
-  var rows = order.map(function(d){ return {d:d, p: total[d] ? Math.round(score[d]/total[d]*100) : 0}; }).sort(function(a,b){return a.p-b.p;});
+  h += "<p>" + (pct >= 70 ? "Acima de 70% no total." : "Abaixo de 70% no total.") + " Meta por domínio: 80%." + "</p>";
+  h += "<h3>Por domínio (menor nota primeiro)</h3>";
+  var rows = order.map(function(d){ return {d:d, c:cmp(d)}; }).sort(function(a,b){return a.c.p-b.c.p;});
   rows.forEach(function(x){
-    h += "<tr><td>" + DN[x.d] + "</td><td>" + score[x.d] + " de " + total[x.d] + "</td><td>" + x.p + "%" + (x.p < 70 ? " (revisar)" : "") + "</td></tr>";
+    h += "<div class='fb'><strong>" + DN[x.d] + "</strong><br>Acertos: " + score[x.d] + " de " + total[x.d] + " (" + fmt(x.c.p) + ")<br>" + x.c.line + "<br>" + x.c.gap + "</div>";
   });
-  h += "</table></div><p></p><button class='next' onclick='location.reload()'>Refazer</button>";
+  h += "<button class='next' onclick='location.reload()'>Refazer</button>";
   r.innerHTML = h;
 }
 $("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
-$("next").onclick = function(){ idx++; if (idx >= list.length) finish(); else show(); };
+function domainDone(d){
+  var c = cmp(d), f = $("dfeed");
+  $("quiz").className = "hidden"; f.className = "";
+  var h = "<h2>" + DN[d] + " concluído</h2>";
+  h += "<p>Acertos: " + score[d] + " de " + total[d] + " (" + fmt(c.p) + ").</p>";
+  h += "<p>" + c.line + "</p>";
+  h += "<p>" + c.gap + "</p>";
+  if (c.p < GOAL) h += "<p>Revise as explicações das questões que errou. Refaça este domínio depois.</p>";
+  h += "<button class='next' id='cont'>" + (idx >= list.length ? "Ver resultado final" : "Continuar") + "</button>";
+  f.innerHTML = h;
+  $("cont").onclick = function(){ f.className = "hidden"; if (idx >= list.length) finish(); else { $("quiz").className = ""; show(); } };
+}
+$("next").onclick = function(){
+  var d = list[idx].d; idx++;
+  if (idx >= list.length || list[idx].d !== d) domainDone(d); else show();
+};
 </script>
