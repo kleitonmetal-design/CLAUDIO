@@ -1,0 +1,180 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Simulado D6 Melhoria contínua</title>
+<style>
+:root{--bg:#fbfaf6;--fg:#1c1f26;--muted:#4a5060;--line:#6b7280;--accent:#1d5fa8;--accent-fg:#ffffff;--surface:#ffffff;--hover:#e8f0fa;--ok:#1b7a3a;--ok-bg:#e3f3e8;--bad:#b3261e;--bad-bg:#fbe6e3;--note-bg:#e8f0fa;--case-bg:#f1eee4;--track:#d9dce3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}
+body{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;background:var(--bg);color:var(--fg);padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:Verdana,Arial,sans-serif;margin:1.5rem 0 .75rem;text-align:left;text-wrap:balance}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}
+p{margin:0 0 1rem;text-align:left}
+.bar{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:.5rem 0 1rem}
+.bar>div{height:100%;background:var(--accent);width:0}
+.tag{display:inline-block;padding:.25rem .75rem;border:2px solid var(--accent);border-radius:6px;margin:0 .5rem .75rem 0}
+button{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;width:100%;padding:.75rem 1rem;margin:0 0 .75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){background:var(--hover)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{color:var(--fg);opacity:1}
+button.ok{border-color:var(--ok);background:var(--ok-bg)}
+button.bad{border-color:var(--bad);background:var(--bad-bg)}
+button.next{width:auto;background:var(--accent);color:var(--accent-fg);border-color:var(--accent);text-align:center}
+.fb{padding:.75rem 1rem;border-left:6px solid var(--accent);background:var(--note-bg);margin:1rem 0}
+.case{padding:1rem;border:2px solid var(--line);border-radius:8px;background:var(--case-bg);margin:0 0 1rem}
+.case h3{margin-top:0}
+.hidden{display:none!important}
+</style>
+<main>
+  <h1>Domínio 6: Melhoria contínua</h1>
+  <div id="intro">
+    <p>30 questões: 10 de estudo de caso (5 casos, 2 perguntas cada) e 20 perguntas diretas.</p>
+    <p>Nos casos, leia o texto inteiro antes de responder. O texto fica visível durante as duas perguntas.</p>
+    <p>Sua meta: 80% neste domínio. Resultado anterior: 50%.</p>
+    <button class="next" id="start">Começar</button>
+  </div>
+  <div id="quiz" class="hidden">
+    <p id="progress"></p>
+    <div class="bar"><div id="fill"></div></div>
+    <span class="tag" id="part"></span>
+    <div id="case" class="case hidden"></div>
+    <h2 id="q"></h2>
+    <div id="opts"></div>
+    <div id="fb" class="fb hidden"></div>
+    <button class="next hidden" id="next">Próxima</button>
+  </div>
+  <div id="mid" class="hidden"></div>
+  <div id="result" class="hidden"></div>
+</main>
+<script>
+var META = {
+  dom: 6,
+  title: "Simulado D6 Melhoria contínua",
+  name: "Domínio 6: Melhoria contínua",
+  base: 50
+};
+var CASES = [
+{t:"Caso 1: Logística Rápida, tratamento de não conformidade",p:[
+"A auditoria interna da Logística Rápida constatou que a revisão de acessos privilegiados não foi feita nos dois últimos trimestres. A resposta da equipe foi retomar a revisão (correção) e registrar como causa “falta de treinamento”, com um treinamento agendado. A não conformidade foi encerrada em duas semanas.",
+"Quatro meses depois, a mesma falha apareceu em outra unidade de negócio. A análise com a técnica dos cinco porquês, feita por um novo analista, revelou que o dono do processo não recebe lembretes, não existe substituto designado quando ele está ausente e não há indicador de revisões feitas no prazo. A análise crítica pela direção ocorrerá em duas semanas."]},
+{t:"Caso 2: Banco Meridian, análise crítica pela direção",p:[
+"No Banco Meridian, a análise crítica ocorre uma vez por ano, em uma reunião de 20 minutos com apresentação do gerente de segurança. A única informação apresentada é o número de incidentes do ano. Não são examinados resultados da avaliação de riscos, mudanças no contexto ou nas expectativas das partes interessadas, resultados de auditorias ou status de ações anteriores.",
+"A ata registra apenas “seguir como está”, assinada pelo presidente. O auditor não encontra decisões sobre oportunidades de melhoria, mudanças no SGSI ou alocação de recursos."]},
+{t:"Caso 3: Clínica Vida, incidente de ransomware",p:[
+"A Clínica Vida sofreu um ataque de ransomware iniciado por e-mail de phishing. A restauração dos backups levou 36 horas, enquanto o objetivo de recuperação era de 8 horas. A revisão pós-incidente concluiu que “o funcionário errou” e a única ação foi repetir o treinamento de conscientização.",
+"A avaliação de riscos não foi atualizada, o plano de continuidade não foi revisto e o filtro de e-mail não foi analisado. Seis meses depois ocorreu outro incidente com o mesmo vetor."]},
+{t:"Caso 4: Metalforte, indicadores e melhoria",p:[
+"Na Metalforte, o indicador “conformidade de aplicação de correções de segurança” está em 98% há três anos, sem variação. Nos dois últimos ciclos, as auditorias internas e externas não registraram achados. A direção declara que o SGSI é “perfeito”.",
+"No mesmo período, os incidentes envolvendo fornecedores aumentaram 40%, e a avaliação de risco de fornecedores está desatualizada há dois anos. Nenhum indicador acompanha fornecedores."]},
+{t:"Caso 5: Telecom Nexo, reincidência e vigilância",p:[
+"Na certificação, a Nexo recebeu uma não conformidade menor por registros de treinamento incompletos. A resposta foi aceita pela certificadora, com um plano de ação para revisar o processo de registro em 90 dias.",
+"Nove meses depois, na auditoria de acompanhamento, o auditor encontrou o mesmo problema e constatou que o plano nunca foi executado. O registro de oportunidades de melhoria também existe, mas nenhuma foi encerrada. A certificadora emitiu uma não conformidade maior."]}
+];
+var Q = [
+{c:0,q:"Qual foi a principal falha no tratamento da não conformidade inicial da Logística Rápida?",o:["Causa raiz superficial e ausência de verificação de eficácia da ação","A correção foi feita rápido demais","O treinamento foi caro","A auditoria interna foi rigorosa demais"],e:"A cláusula 10.2 exige avaliar causas, implementar ação e analisar a eficácia. A causa “falta de treinamento” foi presumida e a eficácia não foi verificada."},
+{c:0,q:"Qual conjunto de ações corretivas é mais adequado após a análise dos cinco porquês?",o:["Definir responsável e substituto, automatizar lembretes e criar indicador de revisões no prazo","Demitir o dono do processo","Aplicar outro treinamento geral","Encerrar o registro e esperar a próxima auditoria"],e:"As ações atacam as causas encontradas: falta de lembrete, de substituto e de indicador. Depois é necessário verificar a eficácia."},
+{c:1,q:"Qual é a principal inadequação da análise crítica do Banco Meridian?",o:["Entradas incompletas e saídas sem decisões, em desacordo com a cláusula 9.3","A reunião acontece uma vez por ano","O presidente assinou a ata","A reunião foi presencial"],e:"A cláusula 9.3.2 lista entradas como resultados de auditorias, riscos, mudanças de contexto e ações anteriores. A cláusula 9.3.3 exige saídas sobre melhoria e mudanças no SGSI."},
+{c:1,q:"O que deveria constar nas saídas da análise crítica?",o:["Decisões sobre oportunidades de melhoria e necessidade de mudanças no SGSI, documentadas como informação documentada","Apenas a aprovação do orçamento de marketing","Apenas a lista de participantes","O relatório da certificadora"],e:"A cláusula 9.3.3 pede decisões ligadas à melhoria contínua e a mudanças no SGSI. A cláusula 9.3 exige reter evidências dos resultados."},
+{c:2,q:"Qual foi a principal falha no aprendizado do incidente da Clínica Vida?",o:["A análise parou na culpa individual, sem examinar causas sistêmicas nem atualizar riscos e controles","O tempo de restauração foi curto demais","O treinamento foi excessivo","O incidente foi comunicado cedo demais"],e:"O controle A.5.27 pede usar o conhecimento dos incidentes para fortalecer controles. A causa sistêmica envolve filtro de e-mail, backup e continuidade."},
+{c:2,q:"Quais atualizações do SGSI são esperadas após esse incidente?",o:["Atualizar a avaliação de riscos, rever controles de malware, backup e continuidade, ajustar indicadores e registrar lições aprendidas","Apenas nova campanha de conscientização","Apenas trocar o antivírus","Nenhuma, pois o incidente foi resolvido"],e:"Melhoria exige revisar riscos e controles relacionados, indicadores e planos, além de registrar o aprendizado."},
+{c:3,q:"O que as cláusulas 9.3 e 10.1 sugerem sobre o caso da Metalforte?",o:["Melhoria contínua não depende de achados: a organização deve usar dados, incidentes e mudanças no contexto para evoluir o SGSI","Sem achados, não há o que melhorar","Indicador estável em 98% prova que tudo está perfeito","Só a certificadora pode propor melhorias"],e:"A cláusula 10.1 exige melhorar continuamente a pertinência, adequação e eficácia. O aumento de incidentes com fornecedores é um sinal."},
+{c:3,q:"Qual indicador complementaria melhor o monitoramento da Metalforte?",o:["Percentual de fornecedores críticos avaliados no ano","Número de impressoras","Horas de treinamento de recepcionistas","Quantidade de reuniões"],e:"O indicador deve ligar-se ao risco que cresce. Fornecedores críticos sem avaliação indicam falha no controle de relacionamento com fornecedores."},
+{c:4,q:"Por que a não conformidade menor da Nexo foi elevada a maior?",o:["Falha em implementar a ação corretiva prometida mostra falha sistêmica na eficácia do SGSI","Porque o certificado venceu","Porque o auditor mudou","Porque a empresa é grande"],e:"A reincidência combinada com a falta de execução do plano compromete a capacidade do sistema de melhorar. Isso justifica uma classificação mais grave."},
+{c:4,q:"Qual é a resposta mais adequada da Nexo à não conformidade maior?",o:["Corrigir, analisar a causa raiz, executar a ação corretiva com prazos e responsáveis e apresentar evidências de eficácia","Contestar o auditor","Remover o requisito do escopo","Esperar a próxima auditoria"],e:"A resposta segue o ciclo da cláusula 10.2: correção, causa raiz, ação e verificação de eficácia com evidência."},
+{c:null,q:"Na ISO/IEC 27001:2022, onde está tratada a ação preventiva?",o:["Integrada ao planejamento de riscos e oportunidades (cláusula 6.1), sem cláusula separada","Na cláusula 10.3","Na cláusula 9.2","Foi eliminada sem substituto"],e:"A edição 2022 trata a prevenção dentro da abordagem de riscos e oportunidades."},
+{c:null,q:"Qual é a diferença entre as cláusulas 10.1 e 10.2 na versão 2022?",o:["10.1 trata da melhoria contínua; 10.2 trata de não conformidade e ação corretiva","10.1 trata da ação corretiva; 10.2 da melhoria contínua","As duas tratam de auditoria","As duas tratam da política"],e:"A edição 2022 inverteu a ordem em relação à de 2013."},
+{c:null,q:"Além de determinar as causas, o que a cláusula 10.2 b exige?",o:["Determinar se existem não conformidades similares ou se poderiam ocorrer","Demitir o responsável","Informar a imprensa","Trocar a certificadora"],e:"A organização verifica se o problema pode existir em outros locais ou processos."},
+{c:null,q:"Qual resultado indica uma análise de causa raiz superficial?",o:["Toda não conformidade resulta na mesma ação: repetir o treinamento","A análise cita processos, controles e responsáveis","A análise usa dados e registros","A análise compara com ocorrências anteriores"],e:"Respostas padronizadas sugerem que a causa raiz não foi investigada."},
+{c:null,q:"Quando a eficácia de uma ação corretiva deve ser verificada?",o:["Depois de tempo suficiente para o processo operar e gerar evidências","No mesmo dia da ação","Nunca","Só se o auditor pedir"],e:"A verificação precisa de tempo de operação e evidências para demonstrar que o problema não voltou."},
+{c:null,q:"Qual entrada da análise crítica trata das partes interessadas?",o:["Mudanças nas necessidades e expectativas das partes interessadas relevantes ao SGSI","Lista de clientes","Preço dos serviços","Metas comerciais"],e:"A edição 2022 da cláusula 9.3.2 inclui as necessidades e expectativas das partes interessadas."},
+{c:null,q:"O que deve ser retido da análise crítica pela direção?",o:["Informação documentada como evidência dos resultados","Nada","Apenas a lista de presença","Apenas o slide de abertura"],e:"A cláusula 9.3.3 exige reter evidência dos resultados das análises."},
+{c:null,q:"Qual afirmação sobre registrar e tratar oportunidades de melhoria é correta?",o:["Boa prática é priorizá-las, atribuir responsáveis e acompanhá-las na análise crítica","A norma exige um formulário específico","São proibidas","Só auditores externos podem propor"],e:"A norma exige melhorar continuamente, sem impor formato. Sem acompanhamento, as oportunidades não geram melhoria."},
+{c:null,q:"Qual evidência demonstra melhoria contínua?",o:["Tendência favorável sustentada em indicadores relevantes ao longo de vários ciclos, ligada a ações","Um único relatório sem comparação","Apenas a ausência de incidentes em um mês","O número de reuniões"],e:"Melhoria se prova com comparação ao longo do tempo e com relação entre ação e resultado."},
+{c:null,q:"Depois de uma auditoria interna, quando as não conformidades devem ser tratadas?",o:["Sem demora indevida, com responsáveis e prazos definidos","Só antes da auditoria externa","Só no próximo ano","Só se forem maiores"],e:"A cláusula 9.2 e a 10.2 pedem tratamento sem demora indevida."},
+{c:null,q:"No incidente de ransomware, qual ação é correção imediata, e não corretiva?",o:["Isolar os sistemas afetados e restaurar o backup","Rever a política de e-mail","Atualizar a avaliação de riscos","Mudar o objetivo de segurança"],e:"Correção é a reação imediata para controlar e corrigir. Ações corretivas atacam a causa."},
+{c:null,q:"A equipe encerra a não conformidade logo após executar a ação. Qual é o problema?",o:["Faltou analisar a eficácia da ação antes de fechar, como exige a cláusula 10.2 d","Nenhum, pois a ação foi executada","Faltou pedir autorização da certificadora","A ação deveria ser desfeita"],e:"Executar não é o mesmo que ser eficaz. A cláusula 10.2 exige analisar a eficácia."},
+{c:null,q:"Qual mapeamento entre o ciclo PDCA e as cláusulas está correto?",o:["Plan: 4 a 7; Do: 8; Check: 9; Act: 10","Plan: 8; Do: 4 a 7; Check: 10; Act: 9","Plan: 9; Do: 10; Check: 4; Act: 8","Plan: 10; Do: 9; Check: 8; Act: 4"],e:"Contexto, liderança, planejamento e suporte formam o Plan. Operação é Do, avaliação de desempenho é Check e melhoria é Act."},
+{c:null,q:"O que o controle A.5.27 (aprendizado com incidentes) prevê?",o:["Usar o conhecimento obtido nos incidentes para reforçar ou melhorar controles","Apenas registrar o incidente","Punir os responsáveis","Divulgar o incidente ao público"],e:"O aprendizado deve realimentar os controles e o SGSI."},
+{c:null,q:"Um teste de recuperação de desastres mostra recuperação em 14 horas, com meta de 4 horas. Qual é o encaminhamento mais adequado?",o:["Registrar como não conformidade ou oportunidade, analisar a causa, ajustar plano e recursos ou rever a meta com aprovação da direção e reportar na análise crítica","Ignorar o resultado","Alterar a meta sem registro","Esperar um incidente real"],e:"O desvio em relação à meta precisa de análise e decisão formal, com ações ou revisão aprovada da meta."},
+{c:null,q:"Qual é o papel da alta direção na melhoria contínua (cláusula 5.1)?",o:["Promover a melhoria contínua e apoiar os papéis de gestão","Executar todas as ações corretivas","Auditar o SGSI","Escrever os procedimentos"],e:"A cláusula 5.1 exige que a alta direção promova a melhoria contínua."},
+{c:null,q:"Uma não conformidade é causada por um fornecedor crítico. Como tratar?",o:["Reagir, tratar com o fornecedor, avaliar a causa no controle de gestão de fornecedores e ajustar contrato e monitoramento","Culpar o fornecedor e encerrar","Ignorar, pois é externo","Trocar o auditor"],e:"A organização responde pelos processos terceirizados (cláusula 8.1). A ação deve alcançar o controle de relacionamento com fornecedores."},
+{c:null,q:"Um mesmo risco se concretiza três vezes apesar das ações. Qual conclusão é mais coerente?",o:["As ações não atacaram a causa raiz, ou a avaliação de riscos precisa ser revista","O risco é inevitável","As ações foram eficazes","O auditor errou"],e:"Repetição indica causa raiz mal identificada ou avaliação desatualizada."},
+{c:null,q:"Qual melhoria é compatível com a ideia de pertinência, adequação e eficácia do SGSI?",o:["Revisar o escopo e os controles quando o negócio muda, mantendo o SGSI útil e eficaz","Manter o SGSI igual por 5 anos","Reduzir controles sem análise","Trocar de certificadora anualmente"],e:"Pertinência, adequação e eficácia exigem que o SGSI acompanhe o contexto e continue funcionando."},
+{c:null,q:"Qual prática torna a análise crítica pela direção realmente útil para a melhoria contínua?",o:["Usar dados de indicadores, auditorias, incidentes e mudanças de contexto para decidir ações, registrando responsáveis e prazos","Realizar a reunião só para cumprir o requisito","Apresentar apenas boas notícias","Limitar a reunião a 10 minutos"],e:"A análise crítica é o momento de transformar dados em decisões. Sem decisões e acompanhamento, ela não gera melhoria."}
+];
+
+var GOAL = 80;
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".",",") + "%"; }
+function shuffle(a){ a = a.slice(); for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var $ = function(id){ return document.getElementById(id); };
+var idx = 0, hits = {c:0, d:0}, tot = {c:0, d:0}, misses = [];
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function show(){
+  var item = Q[idx];
+  $("progress").textContent = "Questão " + (idx+1) + " de " + Q.length;
+  $("fill").style.width = (idx/Q.length*100) + "%";
+  $("part").textContent = item.c !== null ? "Estudo de caso " + (item.c+1) + " de " + CASES.length : "Pergunta direta";
+  var cb = $("case");
+  if (item.c !== null){
+    var cs = CASES[item.c];
+    cb.innerHTML = "<h3>" + esc(cs.t) + "</h3>" + cs.p.map(function(x){ return "<p>" + esc(x) + "</p>"; }).join("");
+    cb.className = "case";
+  } else { cb.className = "case hidden"; }
+  $("q").textContent = item.q;
+  $("fb").className = "fb hidden";
+  $("next").className = "next hidden";
+  var correct = item.o[0], box = $("opts"); box.innerHTML = "";
+  shuffle(item.o).forEach(function(t){
+    var b = document.createElement("button");
+    b.textContent = t;
+    b.onclick = function(){ answer(b, t === correct, correct, item); };
+    box.appendChild(b);
+  });
+}
+function answer(btn, ok, correct, item){
+  var k = item.c !== null ? "c" : "d";
+  tot[k]++; if (ok) hits[k]++; else misses.push({n: idx+1, q: item.q, a: correct, e: item.e});
+  var bs = $("opts").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++){ bs[i].disabled = true; if (bs[i].textContent === correct) bs[i].className = "ok"; }
+  if (!ok) btn.className = "bad";
+  var fb = $("fb");
+  fb.textContent = (ok ? "Correto. " : "Incorreto. A resposta certa está em verde. ") + item.e;
+  fb.className = "fb";
+  $("next").textContent = idx === Q.length-1 ? "Ver resultado" : "Próxima";
+  $("next").className = "next";
+}
+function summary(h, t){ var p = t ? h/t*100 : 0; return fmt(p) + " (" + h + " de " + t + ")"; }
+function midFeedback(){
+  $("quiz").className = "hidden";
+  var m = $("mid"); m.className = "";
+  var p = hits.c/tot.c*100;
+  m.innerHTML = "<h2>Estudos de caso concluídos</h2><p>Acertos: " + summary(hits.c, tot.c) + ".</p><p>" +
+    (p >= GOAL ? "Acima da meta de 80% nos casos." : "Abaixo da meta de 80% nos casos. Releia as explicações antes das perguntas diretas.") +
+    "</p><button class='next' id='cont'>Continuar para as perguntas diretas</button>";
+  $("cont").onclick = function(){ m.className = "hidden"; $("quiz").className = ""; show(); };
+}
+function finish(){
+  $("quiz").className = "hidden";
+  var r = $("result"); r.className = "";
+  var h = hits.c + hits.d, t = tot.c + tot.d, p = h/t*100, diff = p - META.base;
+  var html = "<h2>Resultado final</h2>";
+  html += "<div class='fb'><strong>" + META.name + "</strong><br>Total: " + summary(h, t) + "<br>Estudos de caso: " + summary(hits.c, tot.c) + "<br>Perguntas diretas: " + summary(hits.d, tot.d) + "</div>";
+  html += "<p>Resultado anterior: " + fmt(META.base) + ". Agora: " + fmt(p) + ". " + (diff > 0 ? "Melhorou +" : (diff < 0 ? "Piorou " : "Ficou igual ")) + fmt(diff).replace("%"," pontos") + ".</p>";
+  html += "<p>" + (p >= GOAL ? "Meta de 80% atingida." : "Faltam " + fmt(GOAL - p).replace("%"," pontos percentuais") + " para a meta de 80%.") + "</p>";
+  if (misses.length){
+    html += "<h3>Questões para revisar (" + misses.length + ")</h3>";
+    misses.forEach(function(x){
+      html += "<div class='fb'><strong>Questão " + x.n + ".</strong> " + esc(x.q) + "<br><br><strong>Resposta certa:</strong> " + esc(x.a) + "<br><br>" + esc(x.e) + "</div>";
+    });
+  } else { html += "<p>Nenhuma questão errada.</p>"; }
+  html += "<button class='next' onclick='location.reload()'>Refazer</button>";
+  r.innerHTML = html;
+}
+$("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
+$("next").onclick = function(){
+  var wasCase = Q[idx].c !== null; idx++;
+  if (idx >= Q.length) finish();
+  else if (wasCase && Q[idx].c === null) midFeedback();
+  else show();
+};
+</script>

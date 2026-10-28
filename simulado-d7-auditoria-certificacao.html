@@ -1,0 +1,187 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Simulado D7 Auditoria de certificação</title>
+<style>
+:root{--bg:#fbfaf6;--fg:#1c1f26;--muted:#4a5060;--line:#6b7280;--accent:#1d5fa8;--accent-fg:#ffffff;--surface:#ffffff;--hover:#e8f0fa;--ok:#1b7a3a;--ok-bg:#e3f3e8;--bad:#b3261e;--bad-bg:#fbe6e3;--note-bg:#e8f0fa;--case-bg:#f1eee4;--track:#d9dce3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--case-bg:#222731;--track:#343a46;color-scheme:dark}
+body{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;background:var(--bg);color:var(--fg);padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:Verdana,Arial,sans-serif;margin:1.5rem 0 .75rem;text-align:left;text-wrap:balance}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}
+p{margin:0 0 1rem;text-align:left}
+.bar{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:.5rem 0 1rem}
+.bar>div{height:100%;background:var(--accent);width:0}
+.tag{display:inline-block;padding:.25rem .75rem;border:2px solid var(--accent);border-radius:6px;margin:0 .5rem .75rem 0}
+button{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;width:100%;padding:.75rem 1rem;margin:0 0 .75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){background:var(--hover)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{color:var(--fg);opacity:1}
+button.ok{border-color:var(--ok);background:var(--ok-bg)}
+button.bad{border-color:var(--bad);background:var(--bad-bg)}
+button.next{width:auto;background:var(--accent);color:var(--accent-fg);border-color:var(--accent);text-align:center}
+.fb{padding:.75rem 1rem;border-left:6px solid var(--accent);background:var(--note-bg);margin:1rem 0}
+.case{padding:1rem;border:2px solid var(--line);border-radius:8px;background:var(--case-bg);margin:0 0 1rem}
+.case h3{margin-top:0}
+.hidden{display:none!important}
+</style>
+<main>
+  <h1>Domínio 7: Preparação para auditoria de certificação</h1>
+  <div id="intro">
+    <p>30 questões: 10 de estudo de caso (5 casos, 2 perguntas cada) e 20 perguntas diretas.</p>
+    <p>Nos casos, leia o texto inteiro antes de responder. O texto fica visível durante as duas perguntas.</p>
+    <p>Sua meta: 80% neste domínio. Resultado anterior: 20%.</p>
+    <button class="next" id="start">Começar</button>
+  </div>
+  <div id="quiz" class="hidden">
+    <p id="progress"></p>
+    <div class="bar"><div id="fill"></div></div>
+    <span class="tag" id="part"></span>
+    <div id="case" class="case hidden"></div>
+    <h2 id="q"></h2>
+    <div id="opts"></div>
+    <div id="fb" class="fb hidden"></div>
+    <button class="next hidden" id="next">Próxima</button>
+  </div>
+  <div id="mid" class="hidden"></div>
+  <div id="result" class="hidden"></div>
+</main>
+<script>
+var META = {
+  dom: 7,
+  title: "Simulado D7 Auditoria de certificação",
+  name: "Domínio 7: Preparação para auditoria de certificação",
+  base: 20
+};
+var CASES = [
+{t:"Caso 1: Orion Pagamentos, resultado da Etapa 1",p:[
+"A Orion Pagamentos é uma fintech com 220 funcionários, escritórios em São Paulo e Recife e toda a plataforma hospedada em nuvem. O escopo declarado do SGSI é a plataforma de pagamentos. O atendimento ao cliente, feito por uma empresa terceirizada que acessa dados de clientes, foi deixado fora do escopo.",
+"A Etapa 1 foi feita de forma remota. O auditor líder registrou estes pontos: o Documento de Aplicabilidade (SoA) exclui 6 controles com a justificativa “não aplicável”, sem detalhes; a auditoria interna está marcada para 3 semanas depois da data prevista da Etapa 2; a análise crítica pela direção ainda não ocorreu; a avaliação de riscos não nomeia donos de risco; o contrato com a empresa de atendimento não tem cláusulas de segurança da informação.",
+"A direção da Orion pressiona para manter a data da Etapa 2, pois um grande cliente exige o certificado em 90 dias."]},
+{t:"Caso 2: Metalmax Indústria, achados da Etapa 2",p:[
+"A Metalmax tem 450 funcionários e uma fábrica com sistemas de controle industrial. A Etapa 2 durou 4 dias e usou amostragem. Os achados preliminares do auditor foram: (a) de 20 funcionários desligados na amostra, 14 mantiveram acesso VPN por mais de 30 dias, embora a política exija revogação em 24 horas; (b) dois dos oito relatórios de auditoria interna não têm aprovação assinada; (c) o SoA não foi atualizado depois da abertura de um novo data center; (d) três dos oito objetivos de segurança não têm forma de medição definida.",
+"O gerente de TI argumenta que “o sistema de desligamentos sempre funcionou” e que os 14 casos foram falha de comunicação do RH. A organização pede para o auditor classificar tudo como observação."]},
+{t:"Caso 3: Nuvex Software, imparcialidade",p:[
+"A Nuvex, empresa de software como serviço, contratou a Consult Segura para fazer a análise de lacunas, redigir procedimentos e treinar a equipe. Para a certificação, a Nuvex escolheu o organismo CertBR, que pertence ao mesmo grupo econômico da Consult Segura. Os dois têm sócios em comum e dividem o mesmo escritório comercial.",
+"A CertBR propôs uma equipe de auditoria em que o auditor Paulo trabalhou na Consult Segura até 14 meses atrás. Na época, Paulo ajudou a escrever o procedimento de avaliação de riscos da Nuvex. A Nuvex diz que essa escolha economiza tempo e dinheiro, pois todos já conhecem o sistema."]},
+{t:"Caso 4: Biolab Laboratórios, ciclo de certificação",p:[
+"A Biolab recebeu o certificado ISO/IEC 27001 com decisão de certificação em 10/03/2024. A primeira auditoria de acompanhamento foi marcada para 20/05/2025, 14 meses depois, porque a empresa passou por uma reorganização interna. Nesse período a Biolab abriu um novo laboratório em Campinas, que usa os mesmos sistemas e processos, e quer incluí-lo no certificado sem esperar a recertificação.",
+"A diretora de qualidade afirma que “o certificado vale 3 anos, então o acompanhamento pode ser feito quando for conveniente”."]},
+{t:"Caso 5: Lumina Varejo, evidências sobre backup",p:[
+"Na Etapa 2, o auditor examina o controle de cópias de segurança (backup) da Lumina, rede com 60 lojas. O procedimento diz que o backup é diário e que o teste de restauração é trimestral. O gerente de TI afirma: “fazemos os testes sempre”.",
+"O auditor pede os registros. Os logs mostram testes de restauração apenas no primeiro e no quarto trimestre. O gerente diz que os testes dos outros trimestres foram feitos, mas não foram registrados. Os logs de backup dos últimos 30 dias mostram 5 falhas sem chamado aberto. A análise crítica pela direção do ano não menciona o tema."]}
+];
+var Q = [
+// Caso 1
+{c:0,q:"Qual é a conduta mais adequada do auditor ao encerrar a Etapa 1 da Orion?",o:["Registrar as áreas de preocupação, informar que podem virar não conformidades na Etapa 2 e recomendar adiar a Etapa 2 até a auditoria interna e a análise crítica serem feitas","Emitir o certificado com condições, pois o cliente exige o prazo de 90 dias","Manter a data sem comentários, pois a Etapa 1 não gera achados","Retirar o atendimento do escopo por decisão do auditor"],e:"A Etapa 1 avalia prontidão. O auditor informa as preocupações e pode recomendar adiar a Etapa 2. Auditoria interna e análise crítica precisam ocorrer antes da Etapa 2. O certificado não é emitido na Etapa 1 e a pressão comercial não altera o rito."},
+{c:0,q:"Sobre o atendimento terceirizado que acessa dados de clientes e ficou fora do escopo, qual análise está correta?",o:["O escopo deve considerar interfaces e dependências: se o terceiro trata dados do serviço no escopo, riscos e controles sobre esse fornecedor precisam ser tratados","A exclusão é livre, pois o fornecedor é externo","Basta um contrato comercial sem cláusulas de segurança","O escopo vale só para equipamentos da empresa"],e:"A cláusula 4.3 exige considerar interfaces e dependências. A cláusula 8.1 exige controlar processos terceirizados. Fornecedor com acesso a dados do serviço certificado precisa de controles."},
+// Caso 2
+{c:1,q:"Qual achado da Metalmax tem maior chance de ser classificado como não conformidade maior?",o:["O acesso VPN mantido por mais de 30 dias em 14 de 20 desligados da amostra","Os dois relatórios de auditoria interna sem assinatura","O SoA sem atualização do novo data center","Os três objetivos sem forma de medição"],e:"Falha em 70% da amostra mostra que o controle de revogação de acesso não é eficaz de forma sistêmica. Isso compromete a capacidade do SGSI de atingir resultados. Os demais achados são falhas de menor alcance, embora o SoA desatualizado também precise de correção."},
+{c:1,q:"A Metalmax pede que tudo seja classificado como observação. Qual resposta do auditor é correta?",o:["A classificação depende dos requisitos não atendidos e da evidência. Afirmação do gerente não substitui registros, e a organização pode apresentar evidências adicionais durante a auditoria","Aceitar, pois o gerente conhece melhor o sistema","Cancelar a auditoria imediatamente","Passar a classificação para o consultor da empresa"],e:"A classificação segue requisitos e evidências objetivas. O auditado pode apresentar evidências, mas a declaração verbal não vale como prova. A decisão da classificação é do organismo de certificação."},
+// Caso 3
+{c:2,q:"Qual é o principal problema da proposta da CertBR para a Nuvex?",o:["Ameaça à imparcialidade: relação com a consultoria do mesmo grupo e auditor que atuou no sistema auditado","Nenhum, pois conhecer o sistema torna a auditoria mais rápida","O preço da auditoria será muito alto","A Nuvex é pequena demais para certificação"],e:"A ISO/IEC 17021-1 exige imparcialidade. O organismo não pode oferecer consultoria nem usar pessoal que atuou como consultor do cliente nos últimos 2 anos. Relações com uma consultoria do mesmo grupo também ameaçam a imparcialidade."},
+{c:2,q:"Qual ação a CertBR deve tomar?",o:["Substituir o auditor Paulo e avaliar e gerir a relação com a Consult Segura, ou recusar o cliente se a ameaça não puder ser gerida","Manter Paulo, pois já passaram 14 meses","Manter Paulo e pedir à Nuvex uma declaração de concordância","Pedir à Consult Segura que revise o relatório"],e:"O prazo mínimo é de 2 anos desde a consultoria. Como Paulo atuou há 14 meses, ele não pode auditar. A certificadora deve também analisar e gerir os riscos à imparcialidade do grupo."},
+// Caso 4
+{c:3,q:"Como deve ser analisada a primeira auditoria de acompanhamento da Biolab, feita 14 meses após a decisão de certificação?",o:["Ela está atrasada: a primeira auditoria de acompanhamento deve ocorrer em até 12 meses da decisão de certificação, e o atraso pode levar à suspensão","Está correta, pois o certificado vale 3 anos","Está correta, pois reorganização justifica qualquer prazo","Não é necessária no segundo ano"],e:"O ciclo é de 3 anos, mas as auditorias de acompanhamento são anuais. A primeira ocorre em até 12 meses da decisão. A certificadora pode suspender o certificado se o prazo não for cumprido."},
+{c:3,q:"Para incluir o laboratório de Campinas no certificado, o que a Biolab deve fazer?",o:["Solicitar extensão de escopo à certificadora, que analisa o pedido e define as atividades de auditoria necessárias","Esperar a recertificação, pois o escopo não muda durante o ciclo","Apenas atualizar o site da empresa","Pedir ao consultor que emita novo certificado"],e:"Extensões de escopo são solicitadas ao organismo de certificação, que analisa o pedido e define a auditoria, podendo combiná-la com uma auditoria de acompanhamento."},
+// Caso 5
+{c:4,q:"Como o auditor deve tratar a declaração do gerente de que os testes foram feitos sem registro?",o:["Buscar evidência verificável, como chamados, e-mails, logs de sistema ou observação de um teste, pois declaração verbal sozinha não comprova a operação do controle","Aceitar, pois o gerente é responsável pela área","Aceitar se o diretor de TI também afirmar","Ignorar o tema e passar para outro controle"],e:"Evidência de auditoria precisa ser verificável. A declaração verbal, sem corroboração por registros ou observação, é insuficiente."},
+{c:4,q:"Qual é a conclusão mais coerente para os fatos da Lumina?",o:["Há não conformidade: falta de registros de teste, falhas de backup sem tratamento e ausência de monitoramento e análise crítica. A classificação depende da extensão e do efeito sobre os resultados do SGSI","Não há achado, pois o procedimento existe","Há apenas oportunidade de melhoria","Há não conformidade apenas se o gerente negar"],e:"O controle não é operado nem monitorado conforme o procedimento. Isso afeta o controle de backup e as cláusulas 9.1 e 10.2. A gravidade depende de extensão e impacto."},
+// Diretas
+{c:null,q:"Qual atividade NÃO é objetivo da Etapa 1 da auditoria de certificação?",o:["Confirmar a eficácia operacional dos controles por amostragem em campo","Avaliar o planejamento da auditoria interna e da análise crítica","Obter informações sobre escopo, processos e locais","Avaliar o entendimento do cliente sobre os requisitos da norma"],e:"A eficácia operacional é verificada na Etapa 2. A Etapa 1 foca em escopo, documentação, planejamento e prontidão."},
+{c:null,q:"O SoA declara o controle de monitoramento da segurança física como implementado, mas o auditor visita o local e não encontra nenhum mecanismo. Qual é a leitura correta?",o:["Não conformidade: o SoA declara implementação que não existe na prática, com impacto nos requisitos de tratamento de riscos","Observação sem relevância","Oportunidade de melhoria","Não é achado, pois o SoA é só um documento"],e:"O SoA deve refletir a realidade. Declarar implementação inexistente contradiz a cláusula 6.1.3 e a eficácia do tratamento de riscos."},
+{c:null,q:"Qual fator tende a aumentar o tempo de auditoria de certificação de um SGSI?",o:["Escopo com vários locais, TI complexa e muitos processos terceirizados","Escopo pequeno e processos simples","Uso de modelos de documento prontos","Poucos funcionários e um único local"],e:"A ISO/IEC 27006 considera complexidade, número de pessoas, locais e uso de terceirização no cálculo do tempo."},
+{c:null,q:"Qual condição é exigida para auditar apenas uma amostra dos locais de uma organização com vários sites?",o:["SGSI único e gerido centralmente, com auditoria interna e análise crítica cobrindo todos os locais","Cada local ter seu próprio SGSI independente","Todos os locais terem o mesmo número de funcionários","Os locais ficarem na mesma cidade"],e:"A amostragem multissite exige um sistema de gestão comum, administrado de forma central, com auditoria interna e análise crítica abrangendo todos os locais."},
+{c:null,q:"Qual atividade ocorre no terceiro ano do ciclo de certificação?",o:["Auditoria de recertificação, antes do fim da validade","Etapa 1","Etapa 2","Nenhuma auditoria"],e:"No terceiro ano ocorre a recertificação, planejada para que a decisão saia antes de o certificado expirar."},
+{c:null,q:"Qual situação pode levar a certificadora a suspender um certificado?",o:["A organização não permitir a auditoria de acompanhamento nos prazos","A organização contratar mais funcionários","A organização atualizar a política","A organização abrir um novo escritório sem alterar o escopo"],e:"Recusar ou impedir auditorias de acompanhamento, ou não resolver não conformidades maiores no prazo, são causas de suspensão."},
+{c:null,q:"Um grande vazamento de dados acontece em uma organização certificada. O que o organismo de certificação pode fazer?",o:["Realizar auditoria especial com aviso curto para investigar o impacto no SGSI","Nada, pois o certificado vale 3 anos","Cancelar o certificado sem investigar","Pedir ao consultor da organização que investigue"],e:"O organismo pode realizar auditorias com aviso curto quando há eventos graves, queixas ou mudanças significativas."},
+{c:null,q:"Qual afirmação sobre amostragem em auditoria é correta?",o:["Como a auditoria usa amostras, a ausência de achados não garante a inexistência de não conformidades","A amostra prova que todo o sistema está correto","Amostragem não é permitida em certificação","O auditor precisa verificar 100% dos registros"],e:"A auditoria é baseada em amostragem, então existe incerteza inerente. Por isso o auditor busca amostras representativas."},
+{c:null,q:"O auditor da certificadora pode usar os resultados da auditoria interna da organização?",o:["Pode considerá-los para definir escopo e profundidade, mas não substituem a evidência coletada por ele","Pode aceitar integralmente e dispensar a própria coleta","Deve ignorá-los totalmente","Só pode usar se forem assinados pelo consultor"],e:"A auditoria interna é uma entrada relevante, mas o auditor externo precisa de evidência própria para sua conclusão."},
+{c:null,q:"Durante a auditoria, a equipe da organização descobre sozinha uma falha antes do auditor. Qual é a melhor atitude?",o:["Informar o auditor e apresentar o registro da falha e da ação em andamento","Esconder a falha até o fim da auditoria","Apagar o registro","Pedir que a falha não conste do relatório"],e:"Transparência e evidência de detecção e tratamento pelo próprio sistema demonstram maturidade e eficácia do SGSI."},
+{c:null,q:"Quais informações devem constar do certificado, conforme a ISO/IEC 27006?",o:["Escopo, referência à versão do SoA, norma aplicada e datas de validade","Apenas o nome da empresa","O relatório completo da auditoria","A lista de achados"],e:"O certificado inclui o escopo, a versão do SoA, a norma e as datas relevantes."},
+{c:null,q:"Após a certificação, a organização muda o escopo e atualiza o SoA. O que deve fazer?",o:["Comunicar a mudança à certificadora, que avalia se é necessária uma auditoria adicional","Nada, pois mudanças só importam na recertificação","Esperar a próxima auditoria sem avisar","Trocar de certificadora"],e:"Mudanças significativas em escopo, SoA ou organização devem ser comunicadas, pois afetam as condições do certificado."},
+{c:null,q:"Qual elemento deve constar na resposta a uma não conformidade enviada à certificadora?",o:["Correção, análise de causa raiz, ação corretiva com responsáveis e prazos e evidências","Apenas um pedido de desculpas","Apenas a correção imediata","A lista de funcionários"],e:"A resposta completa mostra a correção, a causa raiz, a ação corretiva e como será verificada a eficácia."},
+{c:null,q:"A organização discorda do resultado de uma auditoria de certificação. Qual caminho é o correto?",o:["Usar o processo de apelações e reclamações do organismo de certificação, tratado de forma independente","Procurar o auditor pessoalmente para negociar","Ignorar o resultado","Contratar outro consultor para alterar o relatório"],e:"O organismo deve manter processo formal e imparcial para apelações e reclamações."},
+{c:null,q:"Qual é a diferença entre acreditação e certificação?",o:["Acreditação reconhece a competência do organismo de certificação; certificação avalia o SGSI da organização","São sinônimos","Certificação avalia o organismo; acreditação avalia a organização","Acreditação é emitida pela própria empresa"],e:"Um organismo de acreditação avalia o organismo de certificação. O organismo de certificação avalia o SGSI da organização."},
+{c:null,q:"Qual norma estabelece requisitos para organismos que auditam e certificam SGSI?",o:["ISO/IEC 27006 em conjunto com a ISO/IEC 17021-1","ISO/IEC 27002","ISO/IEC 27005","ISO 19011 apenas"],e:"A ISO/IEC 27006 complementa a ISO/IEC 17021-1 para certificação de SGSI. A ISO 19011 orienta auditorias, mas não define requisitos de certificadoras."},
+{c:null,q:"Qual é a melhor sequência de preparação nos meses anteriores à Etapa 2?",o:["Auditoria interna completa, tratamento das não conformidades, análise crítica pela direção, revisão do SoA e preparação das evidências","Etapa 2, depois auditoria interna e depois política","Escrever a política e contratar a certificadora no último dia","Análise crítica antes de definir o escopo"],e:"Auditoria interna e análise crítica precisam acontecer antes da Etapa 2, com tempo para corrigir problemas."},
+{c:null,q:"Qual registro o auditor espera ver sobre os auditores internos?",o:["Evidências de competência e de imparcialidade","Apenas o currículo","Apenas a lista de presença","Nenhum registro"],e:"A cláusula 9.2 exige objetividade e imparcialidade. A cláusula 7.2 exige evidência de competência."},
+{c:null,q:"Sobre auditoria remota em certificação, qual afirmação é correta?",o:["Pode ser usada quando permite atingir os objetivos da auditoria, com tecnologia segura e avaliação de riscos","É proibida em qualquer caso","Substitui sempre a auditoria presencial","Só vale para recertificação"],e:"O organismo pode usar técnicas remotas se os objetivos forem atingidos e os riscos tratados, incluindo segurança das informações."},
+{c:null,q:"Como o auditor verifica o comprometimento da alta direção (cláusula 5.1)?",o:["Entrevistando a alta direção e verificando decisões, recursos, atas e aprovação da política","Verificando apenas a assinatura na política","Perguntando ao gerente de TI","Lendo apenas o site da empresa"],e:"O comprometimento se prova por ações observáveis, como decisões, recursos e participação na análise crítica."}
+];
+
+var GOAL = 80;
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".",",") + "%"; }
+function shuffle(a){ a = a.slice(); for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var $ = function(id){ return document.getElementById(id); };
+var idx = 0, hits = {c:0, d:0}, tot = {c:0, d:0}, misses = [];
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function show(){
+  var item = Q[idx];
+  $("progress").textContent = "Questão " + (idx+1) + " de " + Q.length;
+  $("fill").style.width = (idx/Q.length*100) + "%";
+  $("part").textContent = item.c !== null ? "Estudo de caso " + (item.c+1) + " de " + CASES.length : "Pergunta direta";
+  var cb = $("case");
+  if (item.c !== null){
+    var cs = CASES[item.c];
+    cb.innerHTML = "<h3>" + esc(cs.t) + "</h3>" + cs.p.map(function(x){ return "<p>" + esc(x) + "</p>"; }).join("");
+    cb.className = "case";
+  } else { cb.className = "case hidden"; }
+  $("q").textContent = item.q;
+  $("fb").className = "fb hidden";
+  $("next").className = "next hidden";
+  var correct = item.o[0], box = $("opts"); box.innerHTML = "";
+  shuffle(item.o).forEach(function(t){
+    var b = document.createElement("button");
+    b.textContent = t;
+    b.onclick = function(){ answer(b, t === correct, correct, item); };
+    box.appendChild(b);
+  });
+}
+function answer(btn, ok, correct, item){
+  var k = item.c !== null ? "c" : "d";
+  tot[k]++; if (ok) hits[k]++; else misses.push({n: idx+1, q: item.q, a: correct, e: item.e});
+  var bs = $("opts").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++){ bs[i].disabled = true; if (bs[i].textContent === correct) bs[i].className = "ok"; }
+  if (!ok) btn.className = "bad";
+  var fb = $("fb");
+  fb.textContent = (ok ? "Correto. " : "Incorreto. A resposta certa está em verde. ") + item.e;
+  fb.className = "fb";
+  $("next").textContent = idx === Q.length-1 ? "Ver resultado" : "Próxima";
+  $("next").className = "next";
+}
+function summary(h, t){ var p = t ? h/t*100 : 0; return fmt(p) + " (" + h + " de " + t + ")"; }
+function midFeedback(){
+  $("quiz").className = "hidden";
+  var m = $("mid"); m.className = "";
+  var p = hits.c/tot.c*100;
+  m.innerHTML = "<h2>Estudos de caso concluídos</h2><p>Acertos: " + summary(hits.c, tot.c) + ".</p><p>" +
+    (p >= GOAL ? "Acima da meta de 80% nos casos." : "Abaixo da meta de 80% nos casos. Releia as explicações antes das perguntas diretas.") +
+    "</p><button class='next' id='cont'>Continuar para as perguntas diretas</button>";
+  $("cont").onclick = function(){ m.className = "hidden"; $("quiz").className = ""; show(); };
+}
+function finish(){
+  $("quiz").className = "hidden";
+  var r = $("result"); r.className = "";
+  var h = hits.c + hits.d, t = tot.c + tot.d, p = h/t*100, diff = p - META.base;
+  var html = "<h2>Resultado final</h2>";
+  html += "<div class='fb'><strong>" + META.name + "</strong><br>Total: " + summary(h, t) + "<br>Estudos de caso: " + summary(hits.c, tot.c) + "<br>Perguntas diretas: " + summary(hits.d, tot.d) + "</div>";
+  html += "<p>Resultado anterior: " + fmt(META.base) + ". Agora: " + fmt(p) + ". " + (diff > 0 ? "Melhorou +" : (diff < 0 ? "Piorou " : "Ficou igual ")) + fmt(diff).replace("%"," pontos") + ".</p>";
+  html += "<p>" + (p >= GOAL ? "Meta de 80% atingida." : "Faltam " + fmt(GOAL - p).replace("%"," pontos percentuais") + " para a meta de 80%.") + "</p>";
+  if (misses.length){
+    html += "<h3>Questões para revisar (" + misses.length + ")</h3>";
+    misses.forEach(function(x){
+      html += "<div class='fb'><strong>Questão " + x.n + ".</strong> " + esc(x.q) + "<br><br><strong>Resposta certa:</strong> " + esc(x.a) + "<br><br>" + esc(x.e) + "</div>";
+    });
+  } else { html += "<p>Nenhuma questão errada.</p>"; }
+  html += "<button class='next' onclick='location.reload()'>Refazer</button>";
+  r.innerHTML = html;
+}
+$("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
+$("next").onclick = function(){
+  var wasCase = Q[idx].c !== null; idx++;
+  if (idx >= Q.length) finish();
+  else if (wasCase && Q[idx].c === null) midFeedback();
+  else show();
+};
+</script>

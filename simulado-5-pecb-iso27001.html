@@ -1,0 +1,235 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Simulado PECB ISO 27001</title>
+<style>
+:root{--bg:#fbfaf6;--fg:#1c1f26;--muted:#4a5060;--line:#6b7280;--accent:#1d5fa8;--accent-fg:#ffffff;--surface:#ffffff;--hover:#e8f0fa;--ok:#1b7a3a;--ok-bg:#e3f3e8;--bad:#b3261e;--bad-bg:#fbe6e3;--note-bg:#e8f0fa;--track:#d9dce3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--track:#343a46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--fg:#eceef2;--muted:#b4bac6;--line:#8a93a3;--accent:#6aa7ec;--accent-fg:#0d1117;--surface:#1d2129;--hover:#27303d;--ok:#6fd08c;--ok-bg:#183222;--bad:#ff8a80;--bad-bg:#3a1c1a;--note-bg:#1e2a3a;--track:#343a46;color-scheme:dark}
+body{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;background:var(--bg);color:var(--fg);padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:Verdana,Arial,sans-serif;margin:1.5rem 0 .75rem;text-align:left;text-wrap:balance}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}
+p{margin:0 0 1rem;text-align:left}
+.bar{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:.5rem 0 1rem}
+.bar>div{height:100%;background:var(--accent);width:0}
+.tag{display:inline-block;padding:.25rem .75rem;border:2px solid var(--accent);border-radius:6px;margin-bottom:.75rem}
+button{font-family:Verdana,Arial,sans-serif;font-size:12pt;line-height:1.5;text-align:left;width:100%;padding:.75rem 1rem;margin:0 0 .75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){background:var(--hover)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{color:var(--fg);opacity:1}
+button.ok{border-color:var(--ok);background:var(--ok-bg)}
+button.bad{border-color:var(--bad);background:var(--bad-bg)}
+button.next{width:auto;background:var(--accent);color:var(--accent-fg);border-color:var(--accent);text-align:center}
+.fb{padding:.75rem 1rem;border-left:6px solid var(--accent);background:var(--note-bg);margin:1rem 0}
+.hidden{display:none!important}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{font-family:Verdana,Arial,sans-serif;font-size:11pt;line-height:1.5;text-align:left;border:2px solid var(--line);padding:.75rem;min-width:0}
+</style>
+<main>
+  <h1>Simulado 5 PECB ISO/IEC 27001 Lead Implementer</h1>
+  <div id="intro">
+    <p>80 questões. Uma resposta correta em cada uma.</p>
+    <p>Mínimo de 10 questões por domínio. Mais questões nos domínios mais fracos: 7, 3, 6 e 5.</p>
+    <p>Ao fim de cada domínio, você vê sua nota e a comparação com o resultado anterior.</p>
+    <p>Cada resposta mostra a explicação na hora. Sua meta: 80% em cada domínio.</p>
+    <button class="next" id="start">Começar</button>
+  </div>
+  <div id="quiz" class="hidden">
+    <p id="progress"></p>
+    <div class="bar"><div id="fill"></div></div>
+    <span class="tag" id="dom"></span>
+    <h2 id="q"></h2>
+    <div id="opts"></div>
+    <div id="fb" class="fb hidden"></div>
+    <button class="next hidden" id="next">Próxima</button>
+  </div>
+  <div id="dfeed" class="hidden"></div>
+  <div id="result" class="hidden"></div>
+</main>
+<script>
+var DN = {
+  1: "Domínio 1: Princípios e conceitos fundamentais",
+  2: "Domínio 2: Sistema de gestão de segurança da informação",
+  3: "Domínio 3: Planejamento da implementação",
+  4: "Domínio 4: Implementação do SGSI",
+  5: "Domínio 5: Monitoramento e medição",
+  6: "Domínio 6: Melhoria contínua",
+  7: "Domínio 7: Preparação para auditoria de certificação"
+};
+var BASE = {1:86.67,2:83.33,3:50,4:71.43,5:60,6:50,7:20};
+var GOAL = 80;
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".",",") + "%"; }
+function cmp(d){
+  var p = total[d] ? score[d]/total[d]*100 : 0, b = BASE[d], diff = p - b;
+  var sign = diff > 0 ? "+" : "";
+  var gap = p >= GOAL ? "Meta de 80% atingida." : "Faltam " + fmt(GOAL - p).replace("%"," pontos percentuais") + " para a meta de 80%.";
+  var trend = diff > 0 ? "Melhorou" : (diff < 0 ? "Piorou" : "Ficou igual");
+  return {p:p, b:b, diff:diff, line:"Resultado anterior: " + fmt(b) + ". Agora: " + fmt(p) + ". " + trend + " " + sign + fmt(diff).replace("%"," pontos") + ".", gap:gap};
+}
+var Q = [
+// Domínio 7
+{d:7,q:"A Alfa Ltda pediu a certificação ISO/IEC 27001. O auditor da certificadora chegou para a Etapa 1. Qual é o objetivo principal dessa etapa?",o:["Avaliar a documentação e a prontidão da organização para a Etapa 2","Testar se todos os controles funcionam na prática","Emitir o certificado se a documentação estiver completa","Corrigir as falhas encontradas no SGSI"],e:"A Etapa 1 verifica escopo, documentação e prontidão. A eficácia na prática é testada na Etapa 2. O certificado só é decidido depois da Etapa 2."},
+{d:7,q:"Na Etapa 2 da auditoria de certificação, o que o auditor verifica?",o:["Se o SGSI está implementado e é eficaz, com evidências de operação","Se a política foi escrita","Se o orçamento de segurança é suficiente","Se a organização tem consultoria externa"],e:"A Etapa 2 avalia a implementação e a eficácia do SGSI por meio de evidências reais."},
+{d:7,q:"Na auditoria, o auditor descobre que a organização nunca fez avaliação de riscos de segurança da informação. Como isso costuma ser classificado?",o:["Não conformidade maior","Não conformidade menor","Observação","Oportunidade de melhoria"],e:"O requisito 6.1.2 está ausente por completo. Isso compromete a capacidade do SGSI de atingir seus resultados. É uma falha sistêmica: não conformidade maior."},
+{d:7,q:"Em uma amostra de 30 funcionários, o registro de treinamento de apenas 1 está faltando. Todo o resto está correto. Qual é a classificação mais provável?",o:["Não conformidade menor","Não conformidade maior","Nenhum achado","Cancelamento imediato do certificado"],e:"Uma falha pontual, sem comprometer o sistema, é não conformidade menor."},
+{d:7,q:"Qual é a duração do ciclo de certificação ISO/IEC 27001 e a frequência mínima das auditorias de acompanhamento?",o:["3 anos; pelo menos uma vez por ano","2 anos; a cada semestre","3 anos; a cada 3 meses","5 anos; uma vez por ano"],e:"O ciclo dura 3 anos. Há auditorias de acompanhamento ao menos anuais. A recertificação ocorre antes do fim do ciclo."},
+{d:7,q:"A organização contratou uma consultoria para implementar o SGSI. Agora quer que a mesma empresa faça a auditoria de certificação. Qual é o problema?",o:["Conflito de imparcialidade: o organismo de certificação não pode auditar o que ele mesmo consultou","Nenhum problema, pois o consultor conhece bem o SGSI","A consultoria precisa ter mais de 10 anos de mercado","Só órgãos do governo podem certificar"],e:"A ISO/IEC 17021-1 exige imparcialidade. O organismo de certificação não oferece consultoria sobre o sistema que vai auditar."},
+{d:7,q:"O que precisa estar concluído ao menos uma vez antes da auditoria de certificação Etapa 2?",o:["Auditoria interna e análise crítica pela direção","A primeira auditoria de acompanhamento","A recertificação","A revisão do certificado"],e:"As cláusulas 9.2 (auditoria interna) e 9.3 (análise crítica pela direção) devem ter sido executadas antes da Etapa 2."},
+{d:7,q:"A certificadora emitiu uma não conformidade menor. Qual é o primeiro passo para montar o plano de ação?",o:["Corrigir o problema imediato e analisar a causa raiz","Contestar o auditor","Remover o requisito do escopo","Esperar a próxima auditoria"],e:"Primeiro corrige-se o problema. Depois analisa-se a causa raiz para definir a ação corretiva."},
+{d:7,q:"Qual evidência de auditoria costuma ser mais confiável?",o:["Observação direta ou fonte independente do auditado","Declaração verbal do responsável auditado","Documento sem data e sem autor","Opinião do consultor da organização"],e:"Evidências obtidas por observação direta ou de fonte independente têm mais peso do que declarações do próprio auditado."},
+{d:7,q:"No Documento de Aplicabilidade (SoA), a organização excluiu o controle de áreas seguras, mas mantém servidores em uma sala própria. O que o auditor fará?",o:["Questionar a exclusão: ela precisa de justificativa coerente com os riscos","Aceitar, pois a exclusão é livre","Cancelar o certificado","Ignorar, pois o SoA não é auditado"],e:"O SoA (cláusula 6.1.3 d) contém os controles necessários, a justificativa de inclusão e de exclusão, e o status. O auditor verifica se faz sentido frente aos riscos."},
+// Domínio 3
+{d:3,q:"Ao definir o escopo do SGSI (cláusula 4.3), o que a organização deve considerar?",o:["Questões internas e externas, requisitos das partes interessadas, interfaces e dependências","Apenas o departamento de TI","Apenas ativos de hardware","Apenas o que o auditor pedir"],e:"A cláusula 4.3 combina o contexto (4.1), as partes interessadas (4.2) e as interfaces e dependências com outras organizações."},
+{d:3,q:"Qual é o objetivo principal de uma análise de lacunas (gap analysis) no início do projeto?",o:["Comparar a situação atual com os requisitos da norma e identificar o que falta","Obter o certificado","Escolher a certificadora","Substituir a avaliação de riscos"],e:"A análise de lacunas mostra o que já existe e o que falta. Ela orienta o plano do projeto. Não substitui a avaliação de riscos."},
+{d:3,q:"Qual característica a metodologia de avaliação de riscos precisa ter (cláusula 6.1.2)?",o:["Produzir resultados consistentes, válidos e comparáveis","Ser sempre quantitativa","Ser aprovada pela certificadora","Usar obrigatoriamente um software específico"],e:"A norma exige resultados consistentes, válidos e comparáveis, além de critérios de aceitação de riscos. Não impõe método nem ferramenta."},
+{d:3,q:"A empresa contrata um seguro cibernético para cobrir perdas de um risco. Qual opção de tratamento é essa?",o:["Compartilhar o risco","Evitar o risco","Reter o risco","Modificar o risco"],e:"Seguro transfere parte do impacto financeiro a terceiros. É a opção compartilhar (ou transferir)."},
+{d:3,q:"Quem deve aprovar o plano de tratamento de riscos e aceitar os riscos residuais (cláusula 6.1.3)?",o:["O dono do risco","O auditor externo","O consultor","Apenas a equipe de TI"],e:"A norma exige a aprovação do plano e a aceitação dos riscos residuais pelos donos dos riscos."},
+{d:3,q:"Qual afirmação sobre a política de segurança da informação (cláusula 5.2) está correta?",o:["Ela deve ser aprovada pela direção, comunicada e disponível às partes interessadas","Ela deve ser aprovada pela certificadora","Ela deve ser confidencial e restrita à TI","Ela é opcional se houver procedimentos"],e:"A política é definida pela alta direção, comunicada na organização e disponibilizada às partes interessadas, conforme apropriado."},
+{d:3,q:"Sobre os objetivos de segurança da informação (cláusula 6.2), qual afirmação está correta?",o:["Devem ser coerentes com a política e mensuráveis, quando praticável","São opcionais","Devem ser definidos pela certificadora","Não precisam ser monitorados"],e:"Os objetivos devem ser coerentes com a política, mensuráveis quando praticável, comunicados, monitorados e atualizados."},
+// Domínio 6
+{d:6,q:"Ao detectar uma não conformidade, qual é a sequência correta segundo a cláusula 10.2?",o:["Reagir e corrigir, avaliar as causas, implementar a ação, analisar a eficácia","Implementar a ação, fechar o registro sem verificar","Apenas registrar e arquivar","Identificar o culpado, treinar e encerrar"],e:"A sequência é: reagir (controlar e corrigir), avaliar a necessidade de eliminar causas, implementar ações, analisar a eficácia e, se preciso, mudar o SGSI."},
+{d:6,q:"Qual é a diferença entre correção e ação corretiva?",o:["Correção trata o problema detectado; ação corretiva elimina a causa para evitar recorrência","São a mesma coisa","Correção é feita pela certificadora","Ação corretiva é só para riscos altos"],e:"Correção resolve o sintoma. Ação corretiva ataca a causa raiz."},
+{d:6,q:"A cláusula 10.1 exige melhorar continuamente o quê?",o:["A pertinência, a adequação e a eficácia do SGSI","Apenas o número de controles","Apenas a documentação","Apenas a velocidade da rede"],e:"A melhoria contínua mira a pertinência, a adequação e a eficácia do SGSI."},
+{d:6,q:"Qual é uma saída (output) da análise crítica pela direção (cláusula 9.3.3)?",o:["Decisões sobre oportunidades de melhoria e necessidade de mudanças no SGSI","Lista de ativos de TI","O relatório de auditoria externa","O certificado ISO"],e:"As saídas incluem decisões sobre melhoria contínua e mudanças no SGSI, incluindo necessidade de recursos."},
+{d:6,q:"Houve um vazamento de dados. Como o aprendizado deve entrar no SGSI?",o:["Analisar a causa, atualizar riscos e controles e registrar as lições aprendidas","Apenas demitir o responsável","Esperar a auditoria externa","Esconder o incidente do SGSI"],e:"O incidente alimenta a melhoria: causa raiz, revisão de riscos e controles e registro de lições aprendidas (controle A.5.27)."},
+{d:6,q:"Como verificar que uma ação corretiva foi eficaz?",o:["Checar, após um período, se a não conformidade não se repetiu","O responsável afirma que concluiu","Fechar o registro no prazo","Aguardar a próxima auditoria externa"],e:"A eficácia se prova com evidência de que o problema não voltou."},
+{d:6,q:"No ciclo PDCA, a fase Act (Agir) corresponde a quê?",o:["Manter e melhorar o SGSI","Planejar o SGSI","Implementar controles","Medir e auditar"],e:"Act corresponde a Manter e melhorar (cláusula 10). Plan é 4 a 7, Do é 8 e Check é 9."},
+// Domínio 5
+{d:5,q:"O que a organização deve determinar na cláusula 9.1 (monitoramento e medição)?",o:["O que monitorar, os métodos, quando, quem monitora e quando analisar os resultados","Apenas o número de incidentes","Apenas o custo do SGSI","Somente as metas da certificadora"],e:"A cláusula 9.1 pede: o que medir, métodos, quando medir, quem mede, quando analisar e quem analisa."},
+{d:5,q:"Qual requisito vale para o programa de auditoria interna (cláusula 9.2)?",o:["Auditores objetivos e imparciais, em intervalos planejados","Auditar o próprio trabalho","Realizar uma vez e nunca repetir","Contratar sempre um consultor externo"],e:"A auditoria interna ocorre em intervalos planejados, com programa definido e auditores objetivos e imparciais."},
+{d:5,q:"Um gerente de TI implementou o controle de backup. Ele pode auditá-lo na auditoria interna?",o:["Não, pois isso fere a imparcialidade","Sim, pois conhece melhor o controle","Sim, se avisar a direção","Sim, se o backup for simples"],e:"Ninguém audita o próprio trabalho. A imparcialidade é requisito da auditoria interna."},
+{d:5,q:"Qual é um bom indicador de eficácia da conscientização em segurança?",o:["Percentual de funcionários que passaram no teste de phishing","Quantidade de computadores comprados","Horas de trabalho da TI","Número de pastas na rede"],e:"Um bom indicador mede o resultado desejado: o comportamento dos funcionários diante do risco."},
+{d:5,q:"Com que frequência a direção deve fazer a análise crítica do SGSI (cláusula 9.3)?",o:["Em intervalos planejados","Somente antes da certificação","Somente após incidentes","Nunca, se houver auditoria interna"],e:"A análise crítica pela direção ocorre em intervalos planejados. Auditoria interna não a substitui."},
+{d:5,q:"O monitoramento mostra que 40% das contas privilegiadas não foram revisadas no prazo. O que fazer?",o:["Analisar a causa, registrar a não conformidade, definir ação e reportar à direção","Ignorar, pois 60% estão corretas","Excluir o controle do SoA","Esperar a auditoria de certificação"],e:"Desvios no monitoramento geram análise, registro, ação e relato à direção."},
+// Domínio 4
+{d:4,q:"Qual é a estrutura do Anexo A da ISO/IEC 27001:2022?",o:["93 controles em 4 temas: organizacionais, pessoas, físicos e tecnológicos","114 controles em 14 domínios","93 controles em 14 domínios","114 controles em 4 temas"],e:"A versão 2022 tem 93 controles em 4 temas. A versão 2013 tinha 114 controles em 14 domínios."},
+{d:4,q:"Sobre a competência (cláusula 7.2), o que a organização deve fazer?",o:["Definir a competência necessária, prover treinamento quando preciso e reter evidências","Contratar apenas pessoas certificadas","Dispensar evidências","Treinar somente a TI"],e:"A organização determina a competência, garante que as pessoas a tenham e mantém informação documentada como evidência."},
+{d:4,q:"Qual cuidado é exigido no controle da informação documentada (cláusula 7.5)?",o:["Identificação, aprovação, versionamento, acesso e proteção","Guardar apenas em papel","Permitir edição por qualquer pessoa","Apagar versões antigas sem registro"],e:"A informação documentada precisa estar identificada, aprovada, disponível, protegida e controlada em suas versões."},
+{d:4,q:"O que a cláusula 8.1 (planejamento e controle operacional) exige?",o:["Planejar, implementar e controlar os processos, inclusive os terceirizados","Apenas contratar um fornecedor","Somente comprar ferramentas","Somente treinar pessoas"],e:"A operação inclui controlar processos planejados e processos, produtos ou serviços terceirizados relevantes ao SGSI."},
+// Domínio 1
+{d:1,q:"Um relatório financeiro foi alterado por alguém sem autorização. Qual propriedade da informação foi violada?",o:["Integridade","Confidencialidade","Disponibilidade","Rastreabilidade"],e:"Integridade é a exatidão e a completude da informação. A alteração não autorizada a viola."},
+{d:1,q:"O que significa disponibilidade da informação?",o:["Ser acessível e utilizável quando solicitada por uma entidade autorizada","Ser acessível a todos","Não ser alterada","Ser guardada por 5 anos"],e:"Disponibilidade é ter a informação acessível e utilizável sob demanda por quem tem autorização."},
+{d:1,q:"Qual norma dá orientação detalhada sobre a implementação dos controles de segurança?",o:["ISO/IEC 27002","ISO/IEC 27001","ISO/IEC 27000","ISO/IEC 17021"],e:"A ISO/IEC 27002 orienta os controles. A 27001 traz os requisitos certificáveis. A 27000 traz o vocabulário."},
+// Domínio 2
+{d:2,q:"Qual das normas abaixo é certificável?",o:["ISO/IEC 27001","ISO/IEC 27002","ISO/IEC 27005","ISO/IEC 27000"],e:"Somente a ISO/IEC 27001 traz requisitos para certificação."},
+{d:2,q:"Quem deve demonstrar liderança e comprometimento com o SGSI (cláusula 5.1)?",o:["A alta direção","Apenas o gestor de segurança","Apenas a TI","O auditor"],e:"A alta direção deve demonstrar liderança e comprometimento. Isso inclui política, recursos e papéis."},
+{d:2,q:"Os controles do Anexo A são obrigatórios?",o:["Não: a organização escolhe os controles pelos riscos e compara com o Anexo A para não omitir nenhum necessário","Sim, todos os 93","Sim, mas só os tecnológicos","Não, o Anexo A é opcional e pode ser ignorado"],e:"Os controles são definidos pelo tratamento de riscos. O Anexo A serve de comparação. O SoA justifica inclusões e exclusões."}
+,
+{d:7,q:"Qual documento o auditor de certificação usa para verificar quais controles do Anexo A a organização escolheu e por quê?",o:["Documento de Aplicabilidade (SoA)","Organograma da empresa","Plano de férias","Contrato com a certificadora"],e:"O SoA lista os controles necessários, a justificativa de inclusão e exclusão e o status de implementação."},
+{d:7,q:"Na Etapa 1, o auditor conclui que a organização não está pronta. O que pode acontecer?",o:["A Etapa 2 é adiada até a organização corrigir os pontos","O certificado é emitido com condições","A Etapa 2 é dispensada","A certificadora implementa os controles que faltam"],e:"Se a Etapa 1 mostra falta de prontidão, a Etapa 2 é adiada. A certificadora não implementa controles."},
+{d:7,q:"Qual é o papel do guia que acompanha o auditor durante a auditoria?",o:["Facilitar acesso, agenda e contatos, sem influenciar as conclusões","Responder no lugar do auditado","Decidir quais achados serão registrados","Escolher as amostras do auditor"],e:"O guia ajuda na logística. Ele não conduz nem influencia a auditoria."},
+{d:7,q:"Depois da Etapa 2, quem toma a decisão de certificação?",o:["Uma pessoa ou comitê do organismo de certificação que não fez a auditoria","O auditor líder, sozinho","A própria organização auditada","O consultor da organização"],e:"A ISO/IEC 17021-1 exige que a decisão seja tomada por pessoa ou comitê diferente da equipe que auditou."},
+{d:3,q:"Quais partes interessadas a organização considera na cláusula 4.2?",o:["Clientes, reguladores, funcionários e fornecedores, com seus requisitos","Apenas a certificadora","Apenas concorrentes","Apenas acionistas"],e:"A cláusula 4.2 pede as partes interessadas relevantes e seus requisitos, incluindo legais, regulatórios e contratuais."},
+{d:3,q:"Para que servem os critérios de aceitação de riscos definidos na cláusula 6.1.2?",o:["Definir o nível de risco que a organização aceita sem tratamento adicional","Escolher a certificadora","Calcular o preço do projeto","Substituir o plano de tratamento"],e:"Os critérios de aceitação mostram quais riscos podem ser aceitos e quais precisam de tratamento."},
+{d:3,q:"Qual é a diferença entre risco inerente e risco residual?",o:["Inerente existe antes dos controles; residual permanece depois do tratamento","Inerente é o risco aceito; residual é o risco evitado","São sinônimos","Residual existe antes dos controles"],e:"O risco residual é o que sobra depois de aplicar o tratamento. Ele precisa ser aceito pelo dono do risco."},
+{d:3,q:"O que o plano de tratamento de riscos deve conter, na prática?",o:["Ações, responsáveis, prazos e recursos para tratar cada risco","Apenas a lista de ativos","Apenas o orçamento total","Apenas a política de segurança"],e:"Um plano útil define o que fazer, quem faz, até quando e com quais recursos (cláusula 6.1.3)."},
+{d:3,q:"Segundo a cláusula 5.3, quem assegura que papéis e responsabilidades de segurança da informação sejam atribuídos e comunicados?",o:["A alta direção","O auditor interno","O fornecedor de TI","A certificadora"],e:"A alta direção atribui e comunica as responsabilidades e autoridades relevantes ao SGSI."},
+{d:6,q:"Qual é uma entrada da análise crítica pela direção (cláusula 9.3.2)?",o:["Resultados de auditorias e situação das ações de análises anteriores","A lista de férias dos funcionários","O catálogo de produtos","O orçamento de marketing"],e:"As entradas incluem ações anteriores, mudanças no contexto, desempenho do SGSI, resultados de auditorias e de avaliação de riscos, e oportunidades de melhoria."},
+{d:6,q:"A cláusula 10.2 exige guardar informação documentada sobre quê?",o:["A natureza das não conformidades, as ações tomadas e os resultados das ações corretivas","Apenas o nome do auditor","Apenas as não conformidades menores","Nada, o registro é opcional"],e:"Esses registros provam que o ciclo de melhoria funciona."},
+{d:6,q:"Qual situação é uma oportunidade de melhoria, e não uma não conformidade?",o:["O requisito é atendido, mas o processo pode ser mais eficiente","Um requisito da norma não é atendido","Uma política não foi aprovada","Um registro obrigatório não existe"],e:"Se o requisito é atendido, não há não conformidade. Ainda assim, a organização pode melhorar o processo."},
+{d:6,q:"O mesmo problema ocorre pela terceira vez depois de duas ações corretivas. O que isso sugere?",o:["A causa raiz não foi tratada e a análise precisa ser refeita","As ações corretivas funcionaram","O problema é inevitável","O auditor errou"],e:"Repetição indica causa raiz mal identificada. Refaça a análise antes de nova ação."},
+{d:6,q:"Segundo a cláusula 6.3, como as mudanças no SGSI devem ser feitas?",o:["De forma planejada","Sempre de urgência","Sem registro","Somente pela certificadora"],e:"A cláusula 6.3 exige planejamento das mudanças no SGSI."},
+{d:5,q:"O que a organização deve definir no programa de auditoria interna (cláusula 9.2)?",o:["Frequência, métodos, responsabilidades, critérios, escopo e relatórios","Apenas a data da próxima auditoria","Apenas o nome do auditor","Apenas o custo"],e:"O programa define frequência, métodos, responsabilidades, requisitos de planejamento e relatórios, além de critérios e escopo de cada auditoria."},
+{d:5,q:"Para quem os resultados da auditoria interna devem ser relatados?",o:["Para a gerência responsável pela área auditada e para a direção","Apenas para o auditor","Apenas para a certificadora","Para ninguém"],e:"Os resultados são relatados à gerência relevante. Eles alimentam a análise crítica pela direção."},
+{d:5,q:"Qual indicador mede a eficácia do processo de gestão de incidentes?",o:["Tempo médio de resposta e de resolução dos incidentes","Número de impressoras","Quantidade de e-mails enviados","Número de reuniões"],e:"O tempo de resposta e de resolução mostra se o processo trata incidentes de forma efetiva."},
+{d:5,q:"A organização precisa guardar informação documentada dos resultados da auditoria interna?",o:["Sim, como evidência do programa e dos resultados","Não, basta falar na reunião","Só se houver não conformidade maior","Só se a certificadora pedir"],e:"A cláusula 9.2 exige reter informação documentada como evidência do programa e dos resultados."},
+{d:5,q:"Quais são os critérios da auditoria interna do SGSI?",o:["Os requisitos da própria organização para o SGSI e os requisitos da ISO/IEC 27001","Apenas a opinião do auditor","Apenas a lei de proteção de dados","Apenas os controles do Anexo A"],e:"A auditoria interna verifica se o SGSI atende aos requisitos da organização e aos da norma."},
+{d:4,q:"O que a cláusula 7.1 exige sobre recursos?",o:["Determinar e prover os recursos para estabelecer, implementar, manter e melhorar o SGSI","Contratar sempre um consultor","Comprar um software específico","Criar um departamento novo"],e:"A organização determina e provê os recursos necessários ao SGSI."},
+{d:4,q:"Na conscientização (cláusula 7.3), de que as pessoas devem estar cientes?",o:["Da política, de sua contribuição para a eficácia do SGSI e das consequências de não conformidade","Apenas do salário","Apenas dos controles tecnológicos","Apenas dos resultados financeiros"],e:"As pessoas conhecem a política, sua contribuição e as implicações de não cumprir os requisitos."},
+{d:4,q:"O que a organização determina na comunicação (cláusula 7.4)?",o:["O que, quando, com quem, quem comunica e como","Apenas o e-mail do gestor","Apenas as redes sociais","Apenas o idioma do relatório"],e:"A cláusula 7.4 define o que, quando, com quem, quem e como comunicar."},
+{d:4,q:"Na cláusula 8.3, o que a organização faz com o plano de tratamento de riscos?",o:["Implementa o plano e retém informação documentada dos resultados","Arquiva sem executar","Entrega à certificadora","Substitui pelo SoA"],e:"O tratamento de riscos é implementado e seus resultados são documentados."},
+{d:4,q:"Quando a avaliação de riscos deve ser repetida na fase operacional (cláusula 8.2)?",o:["Em intervalos planejados e quando ocorrem mudanças significativas","Somente uma vez","Somente após incidente grave","Somente antes da certificação"],e:"A avaliação de riscos é repetida em intervalos planejados e diante de mudanças significativas."},
+{d:4,q:"O que o controle de políticas de segurança do Anexo A (A.5.1) exige?",o:["Definir, aprovar, publicar, comunicar e revisar em intervalos planejados","Apenas escrever a política","Guardar a política em segredo","Revisar somente em caso de auditoria"],e:"As políticas são aprovadas pela direção, publicadas, comunicadas e revisadas periodicamente."},
+{d:4,q:"O princípio do privilégio mínimo no controle de acesso significa o quê?",o:["Dar a cada pessoa apenas o acesso necessário para sua função","Dar acesso total a gerentes","Dar o mesmo acesso a todos","Remover todas as senhas"],e:"Privilégio mínimo reduz o impacto de erros e abusos."},
+{d:1,q:"O que é confidencialidade?",o:["Propriedade de a informação não ser disponibilizada a pessoas, entidades ou processos não autorizados","Propriedade de a informação estar sempre disponível","Propriedade de a informação ser exata","Propriedade de a informação ser rastreável"],e:"Confidencialidade protege contra divulgação não autorizada."},
+{d:1,q:"O que é um ativo de informação?",o:["Qualquer coisa que tenha valor para a organização, como dados, sistemas, pessoas e processos","Apenas computadores","Apenas dinheiro","Apenas documentos em papel"],e:"Ativo é tudo o que tem valor para a organização e precisa de proteção."},
+{d:1,q:"O que é uma ameaça?",o:["Causa potencial de um incidente indesejado","Fraqueza de um controle","Um tipo de controle","Um requisito legal"],e:"Ameaça é a causa potencial de um incidente. Fraqueza é vulnerabilidade."},
+{d:1,q:"O que é uma vulnerabilidade?",o:["Fraqueza de um ativo ou controle que pode ser explorada por uma ameaça","Uma ameaça externa","Um incidente confirmado","Um controle eficaz"],e:"A vulnerabilidade é a fraqueza explorada pela ameaça."},
+{d:1,q:"Qual afirmação descreve bem o risco?",o:["Efeito da incerteza sobre objetivos, ligado à chance de uma ameaça explorar uma vulnerabilidade","Um incidente que já aconteceu","Um controle técnico","A certeza de perda"],e:"Risco combina probabilidade e consequência. O incidente é o evento que já ocorreu."},
+{d:1,q:"O que significa defesa em profundidade?",o:["Usar várias camadas de controles para proteger os ativos","Usar apenas um firewall muito forte","Esconder os ativos","Depender só de pessoas"],e:"Várias camadas reduzem o impacto da falha de um controle."},
+{d:1,q:"Qual é a diferença entre evento e incidente de segurança da informação?",o:["Evento é uma ocorrência observada; incidente são eventos que comprometem ou podem comprometer ativos ou operações","São a mesma coisa","Incidente é sempre menor que evento","Evento só ocorre em TI"],e:"Todo incidente nasce de eventos, mas nem todo evento é incidente."},
+{d:2,q:"Quais bases a ISO/IEC 27001 usa para o SGSI?",o:["Abordagem de processos, gestão de riscos e melhoria contínua","Apenas tecnologia","Apenas contratos","Apenas auditorias externas"],e:"A norma combina processos, risco e melhoria contínua (PDCA)."},
+{d:2,q:"O que a cláusula 4.4 exige da organização?",o:["Estabelecer, implementar, manter e melhorar continuamente o SGSI","Apenas escrever a política","Apenas contratar a certificadora","Apenas comprar ferramentas"],e:"A cláusula 4.4 resume o dever de manter e melhorar o SGSI."},
+{d:2,q:"Qual é a diferença entre política e procedimento?",o:["Política declara intenção e direção; procedimento descreve como executar","São iguais","Procedimento é aprovado pela certificadora","Política é só para TI"],e:"A política dá a direção. O procedimento diz como fazer."},
+{d:2,q:"Quais cláusulas da ISO/IEC 27001 trazem requisitos obrigatórios para a certificação?",o:["As cláusulas 4 a 10","As cláusulas 0 a 3","Somente o Anexo A","Somente a cláusula 6"],e:"As cláusulas 0 a 3 são introdutórias. Os requisitos estão nas cláusulas 4 a 10."},
+{d:2,q:"Qual norma orienta a gestão de riscos de segurança da informação?",o:["ISO/IEC 27005","ISO/IEC 27001","ISO/IEC 27006","ISO/IEC 27000"],e:"A ISO/IEC 27005 orienta a gestão de riscos de segurança da informação."},
+{d:2,q:"Qual é o foco da ISO/IEC 27003?",o:["Orientação para implementar o SGSI","Requisitos para organismos de certificação","Medição de eficácia","Controles de nuvem"],e:"A ISO/IEC 27003 orienta a implementação. A 27006 trata de organismos de certificação."},
+{d:2,q:"A organização pode excluir requisitos das cláusulas 4 a 10 ao declarar conformidade com a ISO/IEC 27001?",o:["Não, não é permitido excluir requisitos das cláusulas 4 a 10","Sim, se o auditor concordar","Sim, se o risco for baixo","Sim, em pequenas empresas"],e:"Só os controles do Anexo A podem ser excluídos, com justificativa. As cláusulas 4 a 10 são obrigatórias."}
+];
+
+function shuffle(a){ a = a.slice(); for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+// Ordem: domínios mais fracos primeiro (7, 3, 6, 5, 4, 1, 2), embaralhado dentro do domínio
+var order = [7,3,6,5,4,1,2], list = [];
+order.forEach(function(d){ list = list.concat(shuffle(Q.filter(function(x){return x.d===d;}))); });
+
+var idx = 0, score = {}, total = {};
+order.forEach(function(d){ score[d]=0; total[d]=0; });
+var $ = function(id){ return document.getElementById(id); };
+
+function show(){
+  var item = list[idx];
+  $("progress").textContent = "Questão " + (idx+1) + " de " + list.length;
+  $("fill").style.width = (idx/list.length*100) + "%";
+  $("dom").textContent = DN[item.d];
+  $("q").textContent = item.q;
+  $("fb").className = "fb hidden";
+  $("next").className = "next hidden";
+  var correct = item.o[0];
+  var opts = shuffle(item.o);
+  var box = $("opts"); box.innerHTML = "";
+  opts.forEach(function(t){
+    var b = document.createElement("button");
+    b.textContent = t;
+    b.onclick = function(){ answer(b, t === correct, correct, item); };
+    box.appendChild(b);
+  });
+}
+function answer(btn, ok, correct, item){
+  total[item.d]++; if (ok) score[item.d]++;
+  var bs = $("opts").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++){
+    bs[i].disabled = true;
+    if (bs[i].textContent === correct) bs[i].className = "ok";
+  }
+  if (!ok) btn.className = "bad";
+  var fb = $("fb");
+  fb.textContent = (ok ? "Correto. " : "Incorreto. Resposta certa marcada em verde. ") + item.e;
+  fb.className = "fb";
+  $("next").textContent = idx === list.length-1 ? "Ver resultado" : "Próxima";
+  $("next").className = "next";
+}
+function finish(){
+  $("quiz").className = "hidden";
+  var r = $("result"); r.className = "";
+  var all = 0, hit = 0;
+  order.forEach(function(d){ all += total[d]; hit += score[d]; });
+  var pct = Math.round(hit/all*100);
+  var h = "<h2>Resultado: " + hit + " de " + all + " (" + pct + "%)</h2>";
+  h += "<p>" + (pct >= 70 ? "Acima de 70% no total." : "Abaixo de 70% no total.") + " Meta por domínio: 80%." + "</p>";
+  h += "<h3>Por domínio (menor nota primeiro)</h3>";
+  var rows = order.map(function(d){ return {d:d, c:cmp(d)}; }).sort(function(a,b){return a.c.p-b.c.p;});
+  rows.forEach(function(x){
+    h += "<div class='fb'><strong>" + DN[x.d] + "</strong><br>Acertos: " + score[x.d] + " de " + total[x.d] + " (" + fmt(x.c.p) + ")<br>" + x.c.line + "<br>" + x.c.gap + "</div>";
+  });
+  h += "<button class='next' onclick='location.reload()'>Refazer</button>";
+  r.innerHTML = h;
+}
+$("start").onclick = function(){ $("intro").className = "hidden"; $("quiz").className = ""; show(); };
+function domainDone(d){
+  var c = cmp(d), f = $("dfeed");
+  $("quiz").className = "hidden"; f.className = "";
+  var h = "<h2>" + DN[d] + " concluído</h2>";
+  h += "<p>Acertos: " + score[d] + " de " + total[d] + " (" + fmt(c.p) + ").</p>";
+  h += "<p>" + c.line + "</p>";
+  h += "<p>" + c.gap + "</p>";
+  if (c.p < GOAL) h += "<p>Revise as explicações das questões que errou. Refaça este domínio depois.</p>";
+  h += "<button class='next' id='cont'>" + (idx >= list.length ? "Ver resultado final" : "Continuar") + "</button>";
+  f.innerHTML = h;
+  $("cont").onclick = function(){ f.className = "hidden"; if (idx >= list.length) finish(); else { $("quiz").className = ""; show(); } };
+}
+$("next").onclick = function(){
+  var d = list[idx].d; idx++;
+  if (idx >= list.length || list[idx].d !== d) domainDone(d); else show();
+};
+</script>
